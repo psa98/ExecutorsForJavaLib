@@ -97,7 +97,8 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             // тест ловца ошибок
-            throw new IllegalStateException();
+            throw
+                    new IllegalStateException();
         }
     };
 }
