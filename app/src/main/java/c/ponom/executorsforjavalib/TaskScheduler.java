@@ -10,7 +10,7 @@ import static c.ponom.executorsforjavalib.MainActivity.TAG;
 public class TaskScheduler extends AsyncExecutor{
 
 
-    // здесь переопределяются методы, выполняемые
+    // здесь переопределяются коллбэки, выполняемые
     // по ходу исполнения задач
     // интересно, возможен ли случай когда активость прибьют пока мы тут чего-то делаем, то есть до того
     // как мы попробуем вызывать ее методы? И, кстати, как сюда передавать активность для этого самого?
@@ -18,6 +18,11 @@ public class TaskScheduler extends AsyncExecutor{
     // из активности в AsyncExecutor, потом из шедулера сюда, потом кастим ее к нашей.
     // может интерфейсы какие затеять из активности или включать ее в альтернативный конструктор этого
     // класса и хранить в нем?
+
+    //todo - этот класс будет основной рабочий, а его абстрактный родитель может быть и в другом пакете
+    // лежать. Следует понять где будут макеты запускаемого в потоках кода для модификации.
+    // todo - кстати, можно ли и абстрактный и рабочий клас в одном файле держать? а то как то сложно будет.
+    // ну или абстрактный в утилитах, а этот - в model
 
     OnCompletedListener onCompletedListener = new OnCompletedListener() {
         @Override
@@ -31,6 +36,13 @@ public class TaskScheduler extends AsyncExecutor{
         }
     };
 
+    AsyncCallBack asyncCallBack =new AsyncCallBack() {
+        @Override
+        public void asyncResult(Object result) {
+            Log.e(TAG, "++++++++++++++++async result+++++"+result);
+            Log.e(TAG, " Thread = "+Thread.currentThread().getName());
+        }
+    };
 
 
     OnEachCompletedListener onEachCompletedListener = new OnEachCompletedListener() {
@@ -40,10 +52,12 @@ public class TaskScheduler extends AsyncExecutor{
                                  long totalTasks,
                                  ThreadPoolExecutor currentExecutor,
                                  float completion) {
+
             Log.e(TAG, String.format("onEachCompletedListener, " +
                             "задача №%d,готово %d из %d, процент:%s"+" result "+result ,
                     currentTask, tasksCompleted,totalTasks, completion));
             Log.e(TAG, "Thread: "+Thread.currentThread().getName() );
+
             Exception  exception;
             if (result instanceof Exception){
                 exception = (Exception) result;

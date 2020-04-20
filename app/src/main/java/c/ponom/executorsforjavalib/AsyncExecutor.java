@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -18,6 +19,7 @@ public abstract class AsyncExecutor {
      long totalTasks;
      long tasksCompleted=0;
      ThreadPoolExecutor currentExecutor=null;
+
 
     /**
      *
@@ -80,7 +82,7 @@ public abstract class AsyncExecutor {
 
         if (currentExecutor!=null&&currentExecutor.isTerminating())
             throw new IllegalStateException("This scheduler is in shutdown  mode," +
-                " make new instance");
+                " make a new instance");
         totalTasks=tasks.length;
 
         currentExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numberOfThreads);
@@ -96,8 +98,6 @@ public abstract class AsyncExecutor {
             currentExecutor.submit(boxedTask);
         }
     currentExecutor.shutdown();
-
-    boolean b=currentExecutor.isTerminating();
     return currentExecutor;
 
     }
@@ -140,47 +140,96 @@ public abstract class AsyncExecutor {
     1. Принимается одна задача и используется один тред
     2. По завершении ее вызывается предоставленный коллбэк или ничего не вызывается если передан null.
     3. В его результатах будет объект с результатом (в т.ч. с полученным эксепшном при ошибке)
+    4. Возвращается экзекьютор, с которым получатель может делать что хочет - к примеру отменить задание
+    5. Коллбэк ПОКА (TODO) вызывается НЕ  ui потоке, поскольку мы ничего о нем не знаем
+    6. Для получения сведений об исключении отправленный на вызов Callable должен иметь
+    строку "return exception;" в catch секции. Исключение придет в коллбэк в качестве результата
+   */
 
 
 
-    ///// !!!!!!!!!!!!!!!!!!!!!!! недоделано
-    public ThreadPoolExecutor asyncTask(@NonNull final Callable task, @Nullable Callable callBack){
+    public ThreadPoolExecutor asyncTask(@NonNull final Callable task,
+                                        @Nullable final AsyncCallBack asyncCallBack,
+                                        @Nullable final Activity activity) {
 
-        if (currentExecutor!=null&&currentExecutor.isTerminating())
+        if (currentExecutor != null && currentExecutor.isTerminating())
             throw new IllegalStateException("This scheduler is in shutdown  mode," +
-                    " make new instance");
-        else   currentExecutor = (ThreadPoolExecutor) Executors.newSingleThreadExecutor();
+                    " make a new instance");
+        else  currentExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
-        Callable boxedTask = new Callable() {
+
+        final Callable boxedTask = new Callable() {
             @Override
-            public Object call() throws Exception {
-
+            public Object call() {
                 Object result = null;
                 try {
-                    result=task.call();
-                } catch (Exception exception){
-                    result=exception;
-                };
+                    result = task.call();
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                }
+                /* когда мы попадаем сюда, у нас:
+                В result будее результат кода, либо объект Exception если была ошибка.
+                обработка ошибок - если получен Exception - он возвращается в качестве результата,
+                 получатель сам анализирует тип результата
+                */
+                final Object finalResult = result;
+                if (asyncCallBack != null) {
+                    if (activity == null) {
+                        asyncCallBack.asyncResult(finalResult);
+                    } else {
+
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                asyncCallBack.asyncResult(finalResult);
+                            }
+                        });
+                    }
+                }
                 return result;
-
             }
+         };
+        currentExecutor.submit(boxedTask);
+        currentExecutor.shutdown();
+        return currentExecutor;
+    }
 
-        };
 
-        try {
-            boxedTask.call();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    /* Предельно упрощенный метод, принимающий только  Runnable/Callable и передающий их на
+    исполнение в отдельном потоке. Результаты и ошибки не возвращаются.
+    */
+
+    public ThreadPoolExecutor asyncTaskSimple(@NonNull final Runnable task) {
+
+        if (currentExecutor != null && currentExecutor.isTerminating())
+            throw new IllegalStateException("This scheduler is in shutdown  mode," +
+                    " make a new instance");
+        else  currentExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+
 
         currentExecutor.submit(task);
-
+        currentExecutor.shutdown();
 
         return currentExecutor;
     }
 
 
-   */
+    public ThreadPoolExecutor asyncTaskSimple(@NonNull final Callable task) {
+
+        if (currentExecutor != null && currentExecutor.isTerminating())
+            throw new IllegalStateException("This scheduler is in shutdown  mode," +
+                    " make a new instance");
+        else  currentExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+
+        currentExecutor.submit(task);
+        currentExecutor.shutdown();
+        return currentExecutor;
+    }
+
+
+
+
+
 
 
     /* метод  при необходимости обрамляет переданную задачу переданными  в него слушателями */
@@ -212,11 +261,9 @@ public abstract class AsyncExecutor {
                 }
                 /* когда мы попадаем сюда, у нас:
                 В result будее результат кода, либо объект Exception если была ошибка.
-                Если выше была ошибка, она будет передана с нулёвым результатом в runAfterError
                 */
 
                 // число выполненных задач считается с единицы, не с 0
-
                 //обработка ошибок - если получен Exception - он возвращается в качестве результата,
                 // получатель сам анализирует тип результата
 
@@ -268,6 +315,15 @@ public abstract class AsyncExecutor {
 
 
 
+    interface   AsyncCallBack{
+
+
+
+            void asyncResult(Object result);
+
+        }
+
+
     interface   OnCompletedListener{
 
         void runAfterCompletion(ArrayList<Object> results);
@@ -288,8 +344,5 @@ public abstract class AsyncExecutor {
     return exception.
 
      */
-    interface OnErrorListener{
-        void runAfterError(int currentTaskNumber,  Exception exception);
 
-    }
 }
