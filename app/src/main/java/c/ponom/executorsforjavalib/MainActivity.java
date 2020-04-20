@@ -12,9 +12,11 @@ import android.util.Log;
 import android.view.View;
 
 import java.util.EmptyStackException;
+import java.util.concurrent.Callable;
 
 public class MainActivity extends AppCompatActivity {
     final static String TAG="AsyncTestCompat";
+    TaskScheduler myExecutor;
 
 
     @Override
@@ -23,82 +25,93 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "Go!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                myExecutor = new TaskScheduler();
                 launchThreads();
-                //simpleLaunch();
+                myExecutor = new TaskScheduler();
+                launchThreads2();
+
             }
         });
     }
 
     private void launchThreads() {
-        Runnable[] taskLists = new Runnable[]{r1,r2,r3};
-        TaskScheduler myExecutor = new TaskScheduler();
-        myExecutor.submitTasks(2,
+        Callable[] taskLists = new Callable[]{callable1,callable2,callable3,callable1,callable1,callable2,callable3,callable1,callable1,callable2,callable3,callable1,callable1,callable2,callable3,callable1};
+
+        myExecutor.submitTasks(3,
                 myExecutor.onCompletedListener,
                 myExecutor.onEachCompletedListener,
-                myExecutor.onErrorListener,
                 this,
                 taskLists);
 
 
     }
-    // проверяем то, что если вместо активности передать null,
-    // вызываемые методы дергаются не в ui потоке, и что упрощенный метод работает
-    private void simpleLaunch() {
-        Runnable[] taskLists = new Runnable[]{r1,r2,r3,r1};
-        TaskScheduler myExecutor = new TaskScheduler();
-        myExecutor.submitTasks(3,
+
+
+    private void launchThreads2() {
+        Callable[] taskLists = new Callable[]{callable1,callable2,callable3,callable1,callable1,callable2,callable3,callable1,callable1,callable2,callable3,callable1};
+
+        myExecutor.submitTasks(5,
                 myExecutor.onCompletedListener,
-               this,
+                myExecutor.onEachCompletedListener,
+                null,
                 taskLists);
+
+
     }
 
 
+
     // на пробу было переделано под лямбды.
-    // сама библиотека не планируется к исп. J8 для совместимости с API<24
+    // сама библиотека не планируется к исп. версии J8 для совместимости с API<24
 
-    Runnable r1= new Runnable() {
+
+
+    final Callable callable1 = new Callable() {
         @Override
-        public void run() {
-            Log.e(TAG, "run 1");
-            try {
-                Thread.sleep((long) (5000 * Math.random()));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        public Object call() throws Exception {
+
+               Thread.sleep((long) (5000 * Math.random()));
+              if (Math.random()>0.3f) return "from callable 1"; else
+
+                    return      new IllegalStateException();
+
+
         }
+
+
+
     };
 
-    Runnable r2= new Runnable() {
-        @Override
-        public void run() {
-            Log.e(TAG, "run 2");
-            try {
-                Thread.sleep((long) (5000 * Math.random()));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-    final Runnable r3 = new Runnable() {
-        @Override
-        public void run() {
-            Log.e(TAG, "run 3");
-            try {
-                Thread.sleep((long) (5000 * Math.random()));
 
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            // тест ловца ошибок
-            throw
-                    new IllegalStateException();
+    final Callable callable2 = new Callable() {
+        @Override
+        public Object call() throws Exception {
+
+            Thread.sleep((long) (5000 * Math.random()));
+            return "from callable 2";
+
         }
+
+    };
+
+
+    final Callable callable3 = new Callable() {
+        @Override
+        public Object call() throws Exception {
+
+            Thread.sleep((long) (5000 * Math.random()));
+
+
+            return  42;
+        }
+
+
+
     };
 }
