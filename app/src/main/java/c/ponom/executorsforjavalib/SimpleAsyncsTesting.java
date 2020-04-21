@@ -49,7 +49,7 @@ public class SimpleAsyncsTesting extends AppCompatActivity
         });
     }
 
-    final Runnable testRunnable= new Runnable() {
+    public final Runnable testRunnable= new Runnable() {
         @Override
 
         public void run() {
@@ -62,6 +62,17 @@ public class SimpleAsyncsTesting extends AppCompatActivity
             Log.e(TAG, "+++++++++++from testRunnable "+counter);;
         }
     };
+
+
+
+    public static final Runnable unitTestRunnable= new Runnable() {
+        @Override
+
+        public void run() {
+           counter++;
+        }
+    };
+
 
 
     final Callable callable = new Callable() {

@@ -19,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
 public class SimpleAsyncs extends ThreadPoolExecutor {
+    /// обойдемся без расширения может?
 
 
     public SimpleAsyncs(int corePoolSize,
@@ -71,4 +72,12 @@ public class SimpleAsyncs extends ThreadPoolExecutor {
         executor.shutdown();
         return executor;
     }
+
+    /*интересные фишки выявленные по итогам тестов.
+    awaitTermination блокирует до того как последние потоки подали на выполнение, а не до исполнения последнего
+    - пользоваться им надо с умом
+    - никак не могу понять почему
+
+
+     */
 }
