@@ -5,9 +5,9 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import static c.ponom.executorsforjavalib.MainActivity.TAG;
+import static c.ponom.executorsforjavalib.SimpleAsyncsTesting.TAG;
 
-public class TaskScheduler extends AsyncExecutor{
+public class AsyncTaskScheduler extends AsyncExecutor{
 
 
     // здесь переопределяются коллбэки, выполняемые
@@ -19,10 +19,13 @@ public class TaskScheduler extends AsyncExecutor{
     // может интерфейсы какие затеять из активности или включать ее в альтернативный конструктор этого
     // класса и хранить в нем?
 
-    //todo - этот класс будет основной рабочий, а его абстрактный родитель может быть и в другом пакете
+    //todo - этот класс будет основной рабочий, а его абстрактный родитель может и в другом пакете
     // лежать. Следует понять где будут макеты запускаемого в потоках кода для модификации.
     // todo - кстати, можно ли и абстрактный и рабочий клас в одном файле держать? а то как то сложно будет.
     // ну или абстрактный в утилитах, а этот - в model
+    // todo - Вопрос!! Если мы сделаем один класс - то есть тот не будет абстрактный, мы сможем обойтись одним
+    //  файлом? Передав содержимое этого туда,  через pull Up member
+
 
     OnCompletedListener onCompletedListener = new OnCompletedListener() {
         @Override
@@ -40,7 +43,7 @@ public class TaskScheduler extends AsyncExecutor{
         @Override
         public void asyncResult(Object result) {
             Log.e(TAG, "++++++++++++++++async result+++++"+result);
-            Log.e(TAG, " Thread = "+Thread.currentThread().getName());
+            Log.e(TAG, " Thread = WTF"+Thread.currentThread().getName());
         }
     };
 

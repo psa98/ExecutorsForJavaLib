@@ -1,24 +1,23 @@
 package c.ponom.executorsforjavalib;
 
 import android.os.Bundle;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
+import android.util.Log;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import android.util.Log;
-import android.view.View;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
-import java.util.ArrayList;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ThreadPoolExecutor;
 
-public class MainActivity extends AppCompatActivity
+
+public class AsyncExecutorTesting extends AppCompatActivity
 {
     final static String TAG="AsyncTestCompat";
-    TaskScheduler myExecutor;
+    AsyncTaskScheduler myExecutor;
+    static int counter;
 
 
     @Override
@@ -33,27 +32,33 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 Snackbar.make(view, "Go!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                //myExecutor = new TaskScheduler();
+                //myExecutor = new AsyncTaskScheduler();
                 //launchThreads();
-                //myExecutor = new TaskScheduler();
+                //myExecutor = new AsyncTaskScheduler();
                 //launchThreads2();
-                myExecutor =new TaskScheduler();
-                myExecutor.asyncTask(callable,myExecutor.asyncCallBack,null);
+                //myExecutor =new AsyncTaskScheduler();
+                //myExecutor.asyncTask(callable,myExecutor.asyncCallBack,null);
 
-                //myExecutor =new TaskScheduler();
+                //myExecutor =new AsyncTaskScheduler();
                 //myExecutor.asyncTask(callable,null,null);
-                launchTestAsync();
-                //myExecutor =new TaskScheduler();
+                //launchTestAsync();
+                //myExecutor =new AsyncTaskScheduler();
                 //myExecutor.asyncTaskSimple(callable);
-                //myExecutor =new TaskScheduler();
+                //Executor =new AsyncTaskScheduler();
+                //myExecutor.
                 //myExecutor.asyncTaskSimple(testRunnable);
+                Runnable[] tasks= new Runnable[]{testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,};
+
+                SimpleAsyncs.launchTasks(30, tasks);
+                //for (int i=1;i<100;i++) SimpleAsyncs.launchTasks(2,tasks);
+
 
             }
         });
     }
 
     private void launchTestAsync(){
-        myExecutor =new TaskScheduler();
+        myExecutor =new AsyncTaskScheduler();
         myExecutor.asyncTask(callable,myExecutor.asyncCallBack,this);
 
     }
@@ -72,8 +77,7 @@ public class MainActivity extends AppCompatActivity
 
 
     private void launchThreads2() {
-        Callable[] taskLists = new Callable[]{callable,callable2,callable3,
-                callable, callable,callable2,callable3, callable, callable,callable2,callable3, callable};
+        Callable[] taskLists = new Callable[]{callable,callable2};
 
         myExecutor.submitTasks(5,
                 myExecutor.onCompletedListener,
@@ -90,12 +94,28 @@ public class MainActivity extends AppCompatActivity
 
     final Runnable testRunnable= new Runnable() {
         @Override
+
         public void run() {
-         Log.e(TAG, "+++++++++++from test runnable++++++++++++++++++++++++++++++++++" );
-         Log.e(TAG, " Thread = "+Thread.currentThread().getName());
+            try {
+                Thread.sleep((long) (3000 * Math.random()));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            counter++;
+            Log.e(TAG, "+++++++++++from testRunnable "+counter);;
 
         }
     };
+
+    final Runnable testRunnableRND = new Runnable() {
+        @Override
+        public void run() {
+
+             if (Math.random()<0.01f)Log.e(TAG, "+++++++++++from testRunnableRND");
+
+        }
+    };
+
 
 
 
@@ -103,7 +123,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public Object call() throws Exception {
             int i;
-            Log.e(TAG, "+++++++++++from test callable+++++++++++++++++++++++++++++++" );
+            Log.e(TAG, "from test callable+++++++++++++++++++++++++++++++" );
 
             try {
                 Thread.sleep((long) (8000 * Math.random()));

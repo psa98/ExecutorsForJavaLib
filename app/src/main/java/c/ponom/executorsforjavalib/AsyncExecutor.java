@@ -16,9 +16,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 @SuppressWarnings("WeakerAccess")
 public abstract class AsyncExecutor {
 
-     long totalTasks;
-     long tasksCompleted=0;
+     private long totalTasks;
+     private long tasksCompleted=0;
      ThreadPoolExecutor currentExecutor=null;
+     //ThreadPoolExecutor - тут используется именно он, поскольку  у него больше методов,
+    // и он более управляем чем обычный Executors.newFixedThreadPool(n)
 
 
     /**
@@ -41,7 +43,8 @@ public abstract class AsyncExecutor {
      * activity - при передаче сюда активности, методы-слушатели вызываются в ее потоке,
      * при передаче null = в отдельном. Передача активности позволяет вызвать методы изменения ее ui
      * @return возвращает * ThreadPoolExecutor, у которого можно в любой момент  запросить
-     * внутренними функциями, к примеру, данные о числе выполненных и выполняемых задач
+     * внутренними функциями, к примеру, данные о числе выполненных и выполняемых задач, или
+     * сбросить все и остановить
      *
      * Exceptions - любые исключения, возникшие в процессе исполнения, возвращаются в onErrorListener,
      * если он установлен, иначе игнорируются.
@@ -52,17 +55,9 @@ public abstract class AsyncExecutor {
 
 
 
-    /* todo - OnCompletedListener  можно вставить возврат в этот
-             слушатель числа успешно выполненных задач.
-             или списка из выполненных задач, их результатов и ошибки если была
-
-             сделать суперупрощенный метод на замену асинктаска, которому можно скормить кроме списка задач:
-             callable, вызываемый на каждой задаче или нулл, коллбэк в виде callable же на
-             завершение - с таблицей результатов
-
-       todo - сделать набор юнит -тестов
+    /*      todo - сделать набор юнит -тестов
        - реентерабельность - у нас пока одна очередь задач, хотите отправить несколько партий -
-       заводите себе новый  под каждый раз
+       заводите себе новый  под каждый раз, иначе бросит исключение.
        - работу на любом числе тредов и задач, от 1 до сотен
        - возвращаемые результаты - полученную коллекцию как будет готов возвращаемый тип,
        - (размер, адекватность содержимого)
@@ -96,12 +91,12 @@ public abstract class AsyncExecutor {
                     activity,
                     currentExecutor);
             currentExecutor.submit(boxedTask);
+
         }
     currentExecutor.shutdown();
     return currentExecutor;
 
     }
-
 
 
 
