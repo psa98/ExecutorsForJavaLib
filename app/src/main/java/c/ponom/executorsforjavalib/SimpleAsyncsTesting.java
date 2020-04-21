@@ -11,7 +11,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.Callable;
-
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class SimpleAsyncsTesting extends AppCompatActivity
@@ -91,7 +91,7 @@ public class SimpleAsyncsTesting extends AppCompatActivity
             }
 
           // проверка реакции на проброс исключения - если убрать throw из call() k
-                if (Math.random() > 0.5f) return "from callable 1"; else
+                if (Math.random() > 0.05f) return "from callable 1"; else
                     i=42/0;
                 Thread.sleep((long) (5000 * Math.random()));
 

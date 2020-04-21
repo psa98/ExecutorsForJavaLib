@@ -1,11 +1,6 @@
 package c.ponom.executorsforjavalib;
 
-import android.content.Context;
-import android.util.Log;
-
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
-import androidx.test.platform.app.InstrumentationRegistry;
-
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,18 +8,16 @@ import org.junit.runner.RunWith;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
-import static c.ponom.executorsforjavalib.SimpleAsyncsTesting.TAG;
-import static org.junit.Assert.*;
-
 /**
  * Instrumented test, which will execute on an Android device.
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
 @RunWith(AndroidJUnit4ClassRunner.class)
-public class ExampleInstrumentedTest {
+public class AsyncExecutorInstrumentedTest {
 
     static int unitTestCounter;
+
 
 
 
@@ -32,9 +25,12 @@ public class ExampleInstrumentedTest {
     @Test
     public void testLaunchTasksRunnable() throws InterruptedException {
         unitTestCounter=0;
-        int taskCounter=1000;
+        int taskCounter=2000;
+        //// ИТОГИ тестирования - по непонятным причинам, вероятно из-за того что не удается
+        // дождаться завершения всех тестов, из, скажем, 4000 прогонов получается 3987
+        // вероятно как то связано с подачей шатдауна до завершения
 
-        //убеждаемся что отрабатывают все 10000 посланных заданий за разумное
+        //убеждаемся что отрабатывают все 1000 посланных заданий за разумное
         // время, причем эксепшны не влияют на это (обработанные в run или ушедшие наверх в call)
 
 
@@ -44,20 +40,20 @@ public class ExampleInstrumentedTest {
         Callable[] testCallableArray = new Callable[taskCounter];
         Arrays.fill(testCallableArray,unitTestCallable);
 
-      int i = 1;
-
-            // проверяем для потоков от 5 до 50
-
-            SimpleAsyncs.launchTasks(i*5, testRunnableArray);
-            SimpleAsyncs.launchTasks(i*5, testCallableArray);
-            SimpleAsyncs.launchTasks(i*5, testRunnableArray);
-            SimpleAsyncs.launchTasks(i*5, testCallableArray);
 
 
 
 
+          SimpleAsyncs.launchTasks(1 , testRunnableArray);
+          SimpleAsyncs.launchTasks(1 , testCallableArray);
+          SimpleAsyncs.launchTasks(1 , testRunnableArray);
+          SimpleAsyncs.launchTasks(1 , testCallableArray);
 
-        Thread.sleep(15000);
+
+
+
+
+        Thread.sleep(10000);
         System.out.println("count "+ unitTestCounter);
 
     }
@@ -71,7 +67,9 @@ public class ExampleInstrumentedTest {
             unitTestCounter++;
             int i;
             try {
-                if (Math.random() < 0.1f)  i=42/0;
+
+                Thread.sleep(3);
+                if (Math.random() < 0.05f)  i=42/0;
 
             } catch (Exception e) {
               e.printStackTrace();
@@ -84,8 +82,9 @@ public class ExampleInstrumentedTest {
         @Override
         public Object call() throws Exception {
             unitTestCounter++;
+            Thread.sleep(1);
             // тестируем влияние на работу эксепшнов
-            if (Math.random()<0.01) throw new Exception();
+            if (Math.random()<0.05) throw new Exception();
             return null;
         }
 
