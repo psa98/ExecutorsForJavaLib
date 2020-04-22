@@ -18,17 +18,7 @@ import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
-public class SimpleAsyncs extends ThreadPoolExecutor {
-    /// обойдемся без расширения может?
-
-
-    public SimpleAsyncs(int corePoolSize,
-                        int maximumPoolSize,
-                        long keepAliveTime,
-                        TimeUnit unit,
-                        BlockingQueue<Runnable> workQueue) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
-    }
+public class SimpleAsyncs  {
 
     /**
      *
@@ -45,12 +35,11 @@ public class SimpleAsyncs extends ThreadPoolExecutor {
      *
      * метод launchTask выполняет переданный ему массив Runnable,
      * в указанном числе потоков, без вызова любых коллбэков и возвращения результатов
-     * прочие методы базового класса скрыты для упрощения работы
      *
      *
      * @return
      * Экзекьютор, в котором при желании можно вызвать управляющие им методы - прекращение исполнения,
-     * заброс состояния
+     * запрос состояния
      */
 
 
@@ -74,12 +63,9 @@ public class SimpleAsyncs extends ThreadPoolExecutor {
     }
 
     /*интересные фишки выявленные по итогам тестов.
-    awaitTermination блокирует до того как последние потоки подали на выполнение, а не до исполнения последнего
-    - пользоваться им надо с умом
-    - никак не могу понять почему из 4000 запущенных на исполнение задач отпахивают скажем 3960.
-    Возможно итог на экран  уходит до завершения последних заданий, и как добиться другого - я не очень понимаю
-    -
-
+    - любая работа внутри многих потоков с общими данными или с влиянием на общие данные требует
+    использования конкурентных коллекций и атомарных переменных, волатильных переменных и
+    синхронизированных методов
 
      */
 }

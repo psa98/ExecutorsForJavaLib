@@ -1,5 +1,6 @@
 package c.ponom.executorsforjavalib;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,14 +11,25 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import static c.ponom.executorsforjavalib.AsyncExecutor.*;
 
 
-public class AsyncExecutorTesting extends AppCompatActivity
+public class AsyncExecutorExample extends AppCompatActivity
 {
     final static String TAG="AsyncTestCompat";
-    AsyncTaskScheduler myExecutor;
+    AsyncExecutor myExecutor;
     static int counter;
+    static Runnable[] tasks;
+    static Callable[] taskLists;
+
+
+
+
 
 
     @Override
@@ -27,50 +39,43 @@ public class AsyncExecutorTesting extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
+
+        tasks= new Runnable[]{testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,};
+
+
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Go!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                //myExecutor = new AsyncTaskScheduler();
-                //launchThreads();
-                //myExecutor = new AsyncTaskScheduler();
+
+
+                myExecutor = new AsyncExecutor();
+                launchThreads();
+                myExecutor = new AsyncExecutor();
                 //launchThreads2();
-                //myExecutor =new AsyncTaskScheduler();
-                //myExecutor.asyncTask(callable,myExecutor.asyncCallBack,null);
+                //myExecutor =new AsyncExecutor();
+                //myExecutor.asyncTask(callable,asyncCallBack, (Activity) view.getContext());
 
-                //myExecutor =new AsyncTaskScheduler();
-                //myExecutor.asyncTask(callable,null,null);
-                //launchTestAsync();
-                //myExecutor =new AsyncTaskScheduler();
-                //myExecutor.asyncTaskSimple(callable);
-                //Executor =new AsyncTaskScheduler();
-                //myExecutor.
-                //myExecutor.asyncTaskSimple(testRunnable);
-                Runnable[] tasks= new Runnable[]{testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,};
-
-                SimpleAsyncs.launchTasks(30, tasks);
-                //for (int i=1;i<100;i++) SimpleAsyncs.launchTasks(2,tasks);
-
+                //myExecutor =new AsyncExecutor();
 
             }
         });
     }
 
-    private void launchTestAsync(){
-        myExecutor =new AsyncTaskScheduler();
-        myExecutor.asyncTask(callable,myExecutor.asyncCallBack,this);
 
-    }
 
     private void launchThreads() {
-        Callable[] taskLists = new Callable[]{callable,callable2,callable3, callable, callable,callable2,callable3, callable, callable,callable2,callable3, callable, callable,callable2,callable3, callable};
+        taskLists = new Callable[]{callable,callable2,callable3, callable, callable,callable2,callable3, callable, callable,callable2,callable3, callable, callable,callable2,callable3, callable};
 
-        myExecutor.submitTasks(3,
-                myExecutor.onCompletedListener,
-                myExecutor.onEachCompletedListener,
-                this,
-                taskLists);
+
+        myExecutor.submitTasks(1,
+
+                onCompletedListener,
+                onEachCompletedListener,
+                        null,
+                        taskLists);
 
 
     }
@@ -80,8 +85,8 @@ public class AsyncExecutorTesting extends AppCompatActivity
         Callable[] taskLists = new Callable[]{callable,callable2};
 
         myExecutor.submitTasks(5,
-                myExecutor.onCompletedListener,
-                myExecutor.onEachCompletedListener,
+                onCompletedListener,
+                onEachCompletedListener,
                 null,
                 taskLists);
     }
@@ -103,15 +108,6 @@ public class AsyncExecutorTesting extends AppCompatActivity
             }
             counter++;
             Log.e(TAG, "+++++++++++from testRunnable "+counter);;
-
-        }
-    };
-
-    final Runnable testRunnableRND = new Runnable() {
-        @Override
-        public void run() {
-
-             if (Math.random()<0.01f)Log.e(TAG, "+++++++++++from testRunnableRND");
 
         }
     };
@@ -156,6 +152,28 @@ public class AsyncExecutorTesting extends AppCompatActivity
         }
     };
 
+
+    OnCompletedListener onCompletedListener = new OnCompletedListener() {
+        @Override
+        public void runAfterCompletion(Collection<Object> results) {
+
+        }
+    };
+
+    OnEachCompletedListener onEachCompletedListener=new OnEachCompletedListener() {
+        @Override
+        public void runAfterEach(long currentTaskNumber, Object result, long tasksCompleted, long totalTasks, ThreadPoolExecutor currentExecutor, float completion) {
+
+        }
+    };
+
+
+    AsyncCallBack asyncCallBack = new AsyncCallBack() {
+        @Override
+        public void asyncResult(Object result) {
+
+        }
+    };
 
 
 }
