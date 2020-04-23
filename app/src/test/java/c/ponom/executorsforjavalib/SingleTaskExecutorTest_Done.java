@@ -1,0 +1,120 @@
+package c.ponom.executorsforjavalib;
+
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
+import static java.lang.Math.random;
+import static org.junit.Assert.assertEquals;
+
+
+public class SingleTaskExecutorTest_Done {
+
+
+
+    private static final float PERCENT_OF_ERRORS = 0.1f;
+    private static final int TASK_COUNTER = 50;
+    private static final int TIMEOUT = 500; // mseconds
+    private static final int NUMBER_OF_TESTS=50;
+    private static final int NUMBER_OF_TASKS=100;
+    private int tasksCounter;
+
+
+
+    private int completionTestCounter;
+    private static final Object mutexCallback =new Object();
+    private static final Object mutexTask =new Object();
+    // todo = посмотреть что можно сделать с передачей мутексов тут и в других классах, как у синх. коллекций
+
+    private final Collection<Object> resultedCollection =
+            Collections.synchronizedList(new ArrayList<>());
+
+
+     /* сравниваем число фактических вызовов коллбэка от запрошенного,
+      а так же проверяем итоговые   коллекции */
+     //todo - разобраться с возвращаемой парой
+
+
+
+    @Test
+     public void testSubmitTasks() throws InterruptedException {
+
+        final Callable[] testCallableArray = new Callable[NUMBER_OF_TASKS];
+        Arrays.fill(testCallableArray,unitTestCallable);
+
+
+        for (int testBatch = 0; testBatch < NUMBER_OF_TESTS; testBatch++) {
+
+
+                completionTestCounter = 0;
+                resultedCollection.clear();
+
+
+                for (int taskNumber = 0; taskNumber <NUMBER_OF_TASKS; taskNumber++) {
+                SingleTaskExecutor currentExecutor = new SingleTaskExecutor();
+                currentExecutor.submitAsyncTask(testCallableArray[taskNumber],asyncCallBack,null)
+                        .awaitTermination(TIMEOUT,TimeUnit.MILLISECONDS);
+                }
+
+                System.out.println("TasksCompleted " + completionTestCounter);
+                System.out.println("Size " + resultedCollection.size());
+                System.out.println("batch " + (testBatch + 1));
+
+
+
+            }
+
+        }
+        private final Callable unitTestCallable = new Callable() {
+            @Override
+            public Object call() throws Exception {
+
+                // тестируем так же влияние на работу эксепшнов - их надо либо обрабатывать внутри,
+                // либо они прерывают исполнение и остаток кода после не исполняется.
+                // это нормально, главное что вылета программы при этом не происходит
+
+                // До этого блока можно выполнить код, не нуждающийся в синхронизации,
+                // в т.ч. долгий и/или  блокирующий
+                Object result;
+                //result = new Pair<>(0, 0.0); - потом переделать, этот метод не поддерживается, надо свою "пару" сделать
+                synchronized (mutexTask) {
+                tasksCounter++;
+                result=new Object();
+                int i=0;
+                double random =random();
+                // проверяем как бросается исключение в результат
+                try {
+                    if (random  < PERCENT_OF_ERRORS) i = 42 / 0;
+                    else result= random;
+                            //new Pair<>(tasksCounter,random);
+                } catch (Exception exception){
+                    result=exception;
+                }
+                // возвращаем либо результат как пару чисел, либо как исключение.
+                // Возможны, конечно, и другие варианты, к примеру просто проброска исключений выше
+                return result;
+                }
+            }
+        };
+
+
+
+
+
+
+    private SingleTaskExecutor.AsyncCallBack asyncCallBack = new SingleTaskExecutor.AsyncCallBack() {
+        @Override
+         public void asyncResult(Object result) {
+            synchronized (mutexCallback) {
+                resultedCollection.add(result);
+                completionTestCounter++;
+            }
+
+        }
+    };
+}

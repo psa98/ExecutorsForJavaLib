@@ -12,29 +12,31 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+
 @SuppressWarnings("WeakerAccess")
-public  class AsyncExecutor {
+public  class AsyncTasksExecutor {
 
     int  tasksCompleted= 0;
-    // что узнал полезного - AtomicInteger непригоден как счетчик. иногда он изменяется
-    // из иного аппаратного потока. Использовать обычную синхронизацию. Далее:
+    // Общая информация по итогам написания
+    // AtomicInteger не особо пригоден как счетчик. Иногда по итогам тестов он изменяется
+    // из иного аппаратного потока. Использовать  лучше обычную синхронизацию. Далее:
     // в блок синхронизации кроме доступа КО ВСЕМ объектам, способным изменяться из разных
-    // потоков надо включать и все операции собственно изменения. ВСЕ сравнения и проверки
-    // значений надо так же производить в том же блоке. В качестве ЗАМКА следует использовать
-    // финальную переменную метода или финальное поле класса (лучше последнее, причем
-    // для РАЗНЫХ блоков синхронизации следует по возможности использовать РАЗНЫЕ объекты
-    // Использование this для синхронизации внутри анонимного класса, включая Callable/Runnable
-    // ведет к непредсказуемому поведению. Использовать МАКСИМАЛЬНО внешние к блоку объекты,
+    // потоков надо включать и все операции собственно их изменения. ВСЕ сравнения и проверки
+    // значений надо так же производить в том же блоке. В качестве мутекса следует использовать
+    // финальную переменную метода или финальное поле класса, или имя нестатического метода
+    // (лучше последнее, причем  для РАЗНЫХ блоков синхронизации следует по возможности
+    // использовать РАЗНЫЕ объекты  Использование внешнего this для синхронизации внутри
+    // анонимного класса, а так же иного внутреннего класса включая Callable/
+    // Runnable может привести непредсказуемому поведению. Использовать надо внешние к блоку объекты,
     // точно не изменяемые другими тредами. Можно использовать имя самого внешнего класса
-    // как самое надежное = this внутри класса КРОМЕ вложенных и анонимных, где только
-    // полностью квалифицированное имя
+    // как самое надежное = this внутри класса КРОМЕ вложенных и анонимных, где
+    // полностью квалифицированное имя внешнего класса
+
     final Collection<Object> results= Collections.synchronizedList(new ArrayList<>());
-    int totalTasks = 0;;
+    int totalTasks = 0;
 
-     ThreadPoolExecutor currentExecutor=null;
-
-    //ThreadPoolExecutor - тут используется именно он, поскольку  у него больше методов,
-    // и он более управляем чем обычный Executors.newFixedThreadPool(n)
+    final Object innerLock = new Object();
+    ThreadPoolExecutor currentExecutor=null;
 
 
     /**
@@ -47,36 +49,47 @@ public  class AsyncExecutor {
      * обеспечивается последовательное исполнение переданных задач, для большего количества
      * порядок исполнения может быть любым.
      * @param
-     * onCompletedListener,  -
+     * onCompletedListener,  - исполняется один раз после полного исполнения всех переданных задач.
+     * получает список объектов, содержащий результаты исполнения каждой задачи в порядке исполнения
+     * Если необходимо получить и порядковые номера преданных задач - возвращать  следует кортеж или
+     * иной составной объект. При появлении исключения оно будет включено в качестве результата задачи.
+     * Аргумент null - не вызывает слушатель.
+     *
      * @param
-     * onEachCompletedListener,  -
-
+     * onEachCompletedListener,  вызывается строго по порядку исполения задач, возвращает ее порядковые
+     *  номера по порядку поступления и порядку исполнения, результат исполнения задачи (или исключение)
+     *  а так же процент исполнения = выполненные задачи / общее количество * 100
+     *  Аргумент null - не вызывает слушатель.
+     *
      * @param
      * tasks - Runnable, их массив или список, передаваемый на исполнение
      * @param
      * activity - при передаче сюда активности, методы-слушатели вызываются в ее потоке,
      * при передаче null = в отдельном. Передача активности позволяет вызвать методы изменения ее ui
-     * @return возвращает * ThreadPoolExecutor, у которого можно в любой момент  запросить
-     * внутренними функциями, к примеру, данные о числе выполненных и выполняемых задач, или
+     * внутри задач (следует выполнять проверку на null при этом)
+     * @return возвращает  ThreadPoolExecutor, у которого можно в любой момент  запросить
+     * внутренними методами, к примеру, данные о числе выполненных и выполняемых задач, или
      * сбросить все и остановить
      *
      *
      * Таймауты исполнения потоков   не устанавливаются и не используются,
      * но на возвращенный экзекютор можно повесить блокирующий метод awaitTermination(время)
-     * ВАЖНО:
-     * экзекьютор нереентерабельный, второй submit работать не будет и бросит исключение
-     * Создавайте новый!
      *
-     * Пример передаваемой задачи:
+     * Метод нереентерабельный, второй submit работать не будет и бросит исключение
+     * Создавайте новый инстанс!
      *
-     * final Callable callable = new Callable() {
+     *Пример передаваемой задачи:
+     *           final Callable callable = new Callable() {
      *
-     *         //@Override
-     *         public Object call() throws Exception {
-     *             int i;
+     *          //@Override
      *
+     *          public Object call() throws Exception {
+     *          // тут находится код, не требующий синхронизации, в том числе блокирующий
      *
-     *           Thread.sleep((long) (8000 * Math.random()));
+     *           synchronized  (mutex){
+     *
+     *           // в синхронизированном блоке размещается код, работающий с общими данными
+     *
      *           if (Math.random() > 0.5f) return "from callable 1";
      *           else  i=42/0; // <=== пример точки возникновения исключения
      *           если исключение обработать, то оно не попадет в результат слушателя каждой
@@ -84,38 +97,26 @@ public  class AsyncExecutor {
      *
      *           return "from callable 1";
      *              }
+     *          }
      *          };
-     *
-     *
-     *
-     *
      */
-
-
-
 
 
 
     public ThreadPoolExecutor submitTasks(int numberOfThreads,
                                           OnCompletedListener onCompletedListener,
                                           OnEachCompletedListener onEachCompletedListener,
-
                                           Activity activity,
                                           Callable... tasks)  {
 
-
-
         totalTasks=tasks.length;
 
-        if (currentExecutor!=null&&currentExecutor.isTerminating())
+        if (currentExecutor!=null)
             throw new IllegalStateException("This scheduler has tasks or is in shutdown  mode," +
                 " make a new instance");
-
-
         currentExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numberOfThreads);
 
         for (int taskNumber=0;taskNumber<tasks.length; taskNumber++) {
-
             Callable boxedTask= boxTask( tasks[taskNumber],
                     taskNumber,
                     onCompletedListener,
@@ -123,12 +124,15 @@ public  class AsyncExecutor {
                     activity,
                     currentExecutor);
             currentExecutor.submit(boxedTask);
-
         }
     currentExecutor.shutdown();
     return currentExecutor;
-
     }
+
+
+
+
+
 
 
 
@@ -161,72 +165,12 @@ public  class AsyncExecutor {
                 tasks);
     }
 
-    /*
-    аналог упрощенного старого АсинкТаска. Ограничения и особенности:
-    1. Принимается ОДНА задача и используется один тред
-    2. По завершении ее вызывается предоставленный коллбэк или ничего не вызывается если передан null.
-    3. В его результатах будет объект с результатом (в т.ч. с полученным эксепшном при ошибке)
-    4. Возвращается экзекьютор, с которым получатель может делать что хочет - к примеру отменить задание
-    5. Для получения сведений об исключении отправленный на вызов Callable должен иметь
-    строку "return exception;" в catch секции. Исключение придет в коллбэк в качестве результата
-   */
 
 
 
-    public ThreadPoolExecutor asyncTask(@NonNull final Callable task,
-                                        @Nullable final AsyncCallBack asyncCallBack,
-                                        @Nullable final Activity activity) {
 
-        if (currentExecutor != null && currentExecutor.isTerminating())
-            throw new IllegalStateException("This scheduler is in shutdown  mode," +
-                    " make a new instance");
-        else  currentExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-
-
-        final Callable boxedTask = new Callable() {
-            @Override
-            public Object call() {
-
-                Object result = null;
-                try {
-                    result = task.call();
-                } catch (Exception exception) {
-                    //exception.printStackTrace();
-                    result=exception;
-
-                }
-                /* когда мы попадаем сюда, у нас:
-                В result будее результат кода, либо объект Exception если была ошибка.
-                обработка ошибок - если получен Exception - он возвращается из перепределенной
-                задачи в качестве результата,
-                 получатель сам анализирует тип результата
-                */
-                final Object finalResult = result;
-                if (asyncCallBack != null) {
-                    if (activity == null) {
-                        asyncCallBack.asyncResult(finalResult);
-                    } else {
-
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                asyncCallBack.asyncResult(finalResult);
-                            }
-                        });
-                    }
-                }
-                return result;
-            }
-         };
-        currentExecutor.submit(boxedTask);
-        currentExecutor.shutdown();
-        return currentExecutor;
-    }
-
-
-
-    /* метод  при необходимости обрамляет переданную задачу переданными  в него слушателями */
-    private Callable boxTask(final Callable nextTask,
+    /* метод  при необходимости обрамляет переданную задачу переданными  в него слушателями  и вызовами */
+     private Callable boxTask(final Callable nextTask,
                              final int currentTaskNumber,
                              final OnCompletedListener onCompletedListener,
                              final OnEachCompletedListener onEachCompleted,
@@ -234,11 +178,7 @@ public  class AsyncExecutor {
                              final ThreadPoolExecutor currentExecutor){
 
 
-        //TODo - это крайне плохой стиль программирования, такое количество вложенных
-        // if надо разбивать все это минимум на пять разных методов, кторые можно по
-        // отдельности покрыть тестами
-
-         final Callable boxedTask =new Callable() {
+            final Callable boxedTask =new Callable() {
             @Override
             public Object call() throws Exception {
 
@@ -249,7 +189,7 @@ public  class AsyncExecutor {
                }
 
                 catch (  Exception exception) {
-                    //exception.printStackTrace();
+
                     result=exception;
                 }
                 /* когда мы попадаем сюда, у нас:
@@ -262,39 +202,41 @@ public  class AsyncExecutor {
 
                 final Object finalResult = result;
 
-                synchronized (AsyncExecutor.class) {
+                synchronized (innerLock) {
                     results.add(finalResult);
 
-                }
+                    final float completionPercent = (float) tasksCompleted+1 / (float) totalTasks * 100f;
+
                     if (onEachCompleted != null) {
                         if (activity == null) {
+                            // счет выполненных  задач начинается с единицы
                             onEachCompleted.runAfterEach(currentTaskNumber, finalResult,
-                                    tasksCompleted,
+                                    tasksCompleted+1,
                                     totalTasks,
-                                    currentExecutor,
-                                    (float) tasksCompleted / (float) totalTasks * 100f);
+                                    currentExecutor,completionPercent
+                                    );
                         } else {
 
                             activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    onEachCompleted.runAfterEach(currentTaskNumber, finalResult, tasksCompleted,
+                                    onEachCompleted.runAfterEach(currentTaskNumber,
+                                            finalResult, tasksCompleted+1,
                                             totalTasks,
                                             currentExecutor,
-                                            (float) tasksCompleted / (float) totalTasks * 100f);
+                                            completionPercent);
                                 }
                             });
                         }
                     }
-                    // обеспечение вызова завершающего кода
 
-                    synchronized (AsyncExecutor.class) {
+                        // обеспечение вызова завершающего кода
+
                         tasksCompleted++;
-                       if (tasksCompleted < totalTasks) return null;
+                        if (tasksCompleted < totalTasks) return null;
 
+                    }
                         if (onCompletedListener == null) return null;
-
-
                         else if (activity == null) {
                             onCompletedListener.runAfterCompletion(results);
                             return null;
@@ -307,22 +249,13 @@ public  class AsyncExecutor {
                             });
                         }
 
-                    }
             return null;
             }
-
-
          };
-
         return boxedTask;
     }
 
 
-
-    interface   AsyncCallBack{
-
-            void asyncResult(Object result);
-        }
 
 
     interface   OnCompletedListener{

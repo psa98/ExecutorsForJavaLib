@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.random;
 import static org.junit.Assert.assertEquals;
@@ -19,160 +18,186 @@ import static org.junit.Assert.assertTrue;
 public class AsyncExecutorSubmitTasksTest {
 
 
-    /*
-    Выводы по итогам тестов:
-    1. Никакие операции с таким числом потоков над общими данными невозможны без использования конкурентных
-    или иммутабельных данных. Атомики и специализированные коллекции должны нормально работать
-    2. Тестирование всего многопоточного обязательно.
-    3.
-   */
+
     private static final float PERCENT_OF_ERRORS = 0.1f;
-    private static final int TASK_COUNTER = 100000;
-    private static final int TIME_OUT = 30; // seconds
-    private static final int NUMBER_OF_TESTS=10;
+    private static final int TASKS_NUMBER = 10000;
+    private static final int TIMEOUT = 5000; // mseconds
+    private static final int NUMBER_OF_TESTS=50;
 
 
-    private static int unitTestCounter ;
+    private static int onEachTestCounter;
 
     private static final Object lockOnComplete =new Object();
-    private static final Object lockOnEach =new Object();
-
-    // todo - интересно, проявится на реальных задачах та проблема, что вызываемый Callable
-    //  возможно придется обеспечивать возможностью работать с данными вне его через поля
-    //  класса или иной внешний источник? Иными словами, передать внутрь исполняемой
-    //  задачи нужные данные через ее параметр нельзя, у call нет параметров,
-    //   только если обернуть во что-то    или дать доступ к полю объемлющего класса,
-    //  что не является чистой функцией
-    //  более того, и в функции, реализующие интерфейсы передать  параметр норм. способом,
-    //  извне, сложно
-
-
-
-
-    /*
-    TODO Протестировать:
-    asyncTask метод, с callable - в отдельном тесте
-
-    submitTasks метод - в трех вариантах и первый еще на работы с активностью - операция
-     должна выполняться main потоке
-    //
-     */
-
+    private static final Object lockOnUnitTestCounter =new Object();
 
     private final Collection<Object> resultedCollection =
-             Collections.synchronizedCollection(new ArrayList<>());
+            Collections.synchronizedList(new ArrayList<>());
+    private final Collection<Long> resultedCollectionByOrder =
+            Collections.synchronizedList(new ArrayList<Long>());
+    private final Collection<Long> resultedCollectionByTaskNumber =
+            Collections.synchronizedList(new ArrayList<Long>());
+
     private int completionTestCounter;
 
 
+
+
+
+
+
+     /* сравниваем число фактических вызовов слушателей от запрошенного,
+      а так же проверяем полученные коллекции */
+
     @Test
-    public void testSubmitTasksCallableAndRunnable() throws InterruptedException {
+     public void testSubmitTasksCallable() throws InterruptedException {
 
 
-        for (int i = 0; i <NUMBER_OF_TESTS ; i++) {
+        for (int testBatch = 0; testBatch <NUMBER_OF_TESTS ; testBatch++) {
 
-            completionTestCounter=0;
-            unitTestCounter=0;
+            completionTestCounter = 0;
+            onEachTestCounter = 0;
 
-
+            resultedCollectionByOrder.clear();
             resultedCollection.clear();
 
 
-
-            /* тестируется число фактических вызовов слушателей от запрошенного,
-            а так же полученые данные
-
-             */
-
-
-            Callable[] testCallableArray = new Callable[TASK_COUNTER];
+            Callable[] testCallableArray = new Callable[TASKS_NUMBER];
             Arrays.fill(testCallableArray, unitTestCallable);
 
-            AsyncExecutor myExecutor = new AsyncExecutor();
-            myExecutor.submitTasks((int)(10f*random()+1),
+
+            AsyncTasksExecutor myExecutor = new AsyncTasksExecutor();
+            myExecutor.submitTasks((int) (10f * random() + 1),
                     onCompletedListener, onEachCompletedListener, null, testCallableArray)
-                    .awaitTermination(TIME_OUT, TimeUnit.SECONDS);
+                    .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
-            myExecutor = new AsyncExecutor();
-            myExecutor.submitTasks((int)(30f*random()+1),
+
+            myExecutor = new AsyncTasksExecutor();
+            myExecutor.submitTasks((int) (30f * random() + 1),
                     onCompletedListener, onEachCompletedListener, null, testCallableArray)
-                    .awaitTermination(TIME_OUT, TimeUnit.SECONDS);
+                    .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
-
-            myExecutor = new AsyncExecutor();
-            myExecutor.submitTasks((int)(100f*random()+1),
+            myExecutor = new AsyncTasksExecutor();
+            myExecutor.submitTasks((int) (100f * random() + 1),
                     onCompletedListener, onEachCompletedListener, null, testCallableArray)
-                    .awaitTermination(TIME_OUT, TimeUnit.SECONDS);
+                    .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
 
-            myExecutor = new AsyncExecutor();
-            myExecutor.submitTasks((int)(400f*random()+1),
+            myExecutor = new AsyncTasksExecutor();
+            myExecutor.submitTasks((int) (100f * random() + 1),
                     onCompletedListener, onEachCompletedListener, null, testCallableArray)
-                    .awaitTermination(TIME_OUT, TimeUnit.SECONDS);
+                    .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
+
+
 
 
             System.out.println("count " + completionTestCounter);
             System.out.println("Size " + resultedCollection.size());
-            System.out.println("batch " + (i + 1));
+            System.out.println("batch " + (testBatch + 1));
 
+            // проверка того что в коллекции не одни null, то есть что
+            // исключения в нее тоже попадают из результата.
+            boolean containsException = false;
 
-            // увеличение счетчика за цикл происходит дважды, в собственнно задаче
-            // и в колбэке вызываемом после выполнения каждой
-            assertEquals(TASK_COUNTER * 4 * 2, unitTestCounter);
-            boolean containsException=false;
-            for (Object record:
-                 resultedCollection) {
+            for (Object record :
+                    resultedCollection) {
                 if (record instanceof Exception) containsException = true;
+
 
             }
             assertTrue(containsException);
-            assertEquals(TASK_COUNTER * 4 ,resultedCollection.size());
+
+
+            // плюс проверка того что все вызовы onCompleted реально приходят по порядку
+            // исполнения, а не произвольно в первой тысяче вызовов как минимум
+            boolean byOrder = false;
+
+            // resultedCollectionByOrder не имеет get, плюс
+            // оно не кастится в Array, создаем новую коллекцию
+            ArrayList<Long> listByOrder = new ArrayList<>(resultedCollectionByOrder);
+
+            // номера задач по порядку выполнения идут с единицы
+            // todo - переделать что бы шли с нуля
+            for (int j = 0; j < TASKS_NUMBER/4; j++) {
+
+                // проверяем что номера выполненных задач (для первой пачки)
+                // по порядку выполнения идут с 1 по возрастающей и что всегда
+                // правильно передается порядковый номер задачи в onEachComplete
+
+                if (listByOrder.get(j) == j+1)
+                    byOrder = true;
+                else {
+                    byOrder = false;
+                    break;
+                }
+            }
+            assertTrue(byOrder);
+
+            // увеличение счетчика за цикл происходит дважды, в собственнно задаче
+            // и в колбэке вызываемом после выполнения каждой/assertEquals
+            // (TASKS_NUMBER * 4, resultedCollection.size());
+            assertEquals(TASKS_NUMBER * 4 * 2, onEachTestCounter);
+
+
             //коллбэк по исполнению пакета задач исполняется 4 раза в каждом цикле
             assertEquals(4, completionTestCounter);
         }
     }
 
+
+
+
+
+
+
+
+
+
     private final Callable unitTestCallable = new Callable() {
         @Override
-        public Object call() throws Exception {
+         public Object call() throws Exception {
 
-            // тестируем влияние на работу эксепшнов - их надо либо обрабатывать внутри,
+            // тестируем так же влияние на работу эксепшнов - их надо либо обрабатывать внутри,
             // либо они прерывают исполнение и остаток кода после не исполняется.
             // это нормально, главное что вылета программы при этом не происходит
 
-            synchronized (AsyncExecutorSubmitTasksTest.class){
-                unitTestCounter++;
+            // До этого блока можно выполнить код, не нуждающийся в синхронизации,
+            // в т.ч. долгий и/или  блокирующий
+
+            synchronized (lockOnUnitTestCounter){
+                onEachTestCounter++;
+                // этот счетчик увеличивается дважды - тут и в onEach.
+                // но лучше на 2 разных разделить
             }
             int i;
             double result;
             if ((result = random()) < PERCENT_OF_ERRORS) i = 42 / 0;
-
-
+            // в данном случае исключение пробрасывается в результат onEach. Но его можно и тут обработать,
+            // выдав в этом случае альтернативный результат
             return result;
-
         }
-
     };
 
 
-    private AsyncExecutor.OnCompletedListener onCompletedListener
-            = new AsyncExecutor.OnCompletedListener() {
+     private AsyncTasksExecutor.OnCompletedListener onCompletedListener
+            = new AsyncTasksExecutor.OnCompletedListener() {
         @Override
         public void runAfterCompletion(Collection<Object> results) {
 
-            synchronized (AsyncExecutorSubmitTasksTest.class) {
-                //требуется для любой работы с элементами synchronizedCollection,
-                // по самой коллекции или по this
-
+            // До этого блока можно выполнить код, не нуждающийся в синхронизации,
+            // в т.ч. долгий и/или  блокирующий
+            synchronized (lockOnComplete) {
                     completionTestCounter++;
                     resultedCollection.addAll(results);
+
+
             }
         }
 
     };
 
 
-    private AsyncExecutor.OnEachCompletedListener onEachCompletedListener
-            = new AsyncExecutor.OnEachCompletedListener() {
+    private AsyncTasksExecutor.OnEachCompletedListener onEachCompletedListener
+            = new AsyncTasksExecutor.OnEachCompletedListener() {
         @Override
         public void runAfterEach(long currentTaskNumber,
                                  Object result,
@@ -181,8 +206,11 @@ public class AsyncExecutorSubmitTasksTest {
                                  ThreadPoolExecutor currentExecutor,
                                  float completion) {
 
-            synchronized (AsyncExecutorSubmitTasksTest.class){
-                unitTestCounter++;
+
+            synchronized (lockOnUnitTestCounter){
+                onEachTestCounter++;
+                resultedCollectionByOrder.add(tasksCompleted);
+                resultedCollectionByTaskNumber.add(currentTaskNumber);
             }
 
         }

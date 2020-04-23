@@ -1,6 +1,5 @@
 package c.ponom.executorsforjavalib;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,25 +10,20 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import static c.ponom.executorsforjavalib.AsyncExecutor.*;
+import c.ponom.executorsforjavalib.AsyncTasksExecutor.OnEachCompletedListener;
 
 
 public class AsyncExecutorExample extends AppCompatActivity
 {
     final static String TAG="AsyncTestCompat";
-    AsyncExecutor myExecutor;
+    AsyncTasksExecutor myExecutor;
     static int counter;
     static Runnable[] tasks;
     static Callable[] taskLists;
-
-
-
-
 
 
     @Override
@@ -40,7 +34,9 @@ public class AsyncExecutorExample extends AppCompatActivity
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
 
-        tasks= new Runnable[]{testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,};
+        tasks= new Runnable[]{testRunnable,testRunnable,
+                testRunnable,testRunnable,testRunnable,
+                testRunnable,testRunnable,testRunnable,testRunnable,testRunnable,};
 
 
 
@@ -49,17 +45,8 @@ public class AsyncExecutorExample extends AppCompatActivity
             public void onClick(View view) {
                 Snackbar.make(view, "Go!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-
-
-                myExecutor = new AsyncExecutor();
+                myExecutor = new AsyncTasksExecutor();
                 launchThreads();
-                myExecutor = new AsyncExecutor();
-                //launchThreads2();
-                //myExecutor =new AsyncExecutor();
-                //myExecutor.asyncTask(callable,asyncCallBack, (Activity) view.getContext());
-
-                //myExecutor =new AsyncExecutor();
-
             }
         });
     }
@@ -67,16 +54,16 @@ public class AsyncExecutorExample extends AppCompatActivity
 
 
     private void launchThreads() {
-        taskLists = new Callable[]{callable,callable2,callable3, callable, callable,callable2,callable3, callable, callable,callable2,callable3, callable, callable,callable2,callable3, callable};
+        taskLists = new Callable[]{callable,callable2,callable3,
+                    callable, callable,callable2,callable3, callable,
+                    callable,callable2,callable3, callable, callable,
+                    callable2,callable3, callable};
 
 
-        myExecutor.submitTasks(1,
-
-                onCompletedListener,
+        myExecutor.submitTasks(1,onCompletedListener,
                 onEachCompletedListener,
                         null,
                         taskLists);
-
 
     }
 
@@ -91,11 +78,8 @@ public class AsyncExecutorExample extends AppCompatActivity
                 taskLists);
     }
 
-
-
     // на пробу было переделано под лямбды.
     // сама библиотека не планируется к исп. версии J8 для совместимости с API<24
-
 
     final Runnable testRunnable= new Runnable() {
         @Override
@@ -136,8 +120,11 @@ public class AsyncExecutorExample extends AppCompatActivity
 
     final Callable callable2 = new Callable() {
         @Override
-        public Object call() throws Exception {
+        synchronized public Object call() throws Exception {
             Thread.sleep((long) (5000 * Math.random()));
+            int i;
+            if (Math.random() > 0.5f) return "from callable 1"; else
+                i=42/0;
             return "from callable 2";
 
         }
@@ -153,27 +140,20 @@ public class AsyncExecutorExample extends AppCompatActivity
     };
 
 
-    OnCompletedListener onCompletedListener = new OnCompletedListener() {
+    AsyncTasksExecutor.OnCompletedListener onCompletedListener = new AsyncTasksExecutor.OnCompletedListener() {
         @Override
         public void runAfterCompletion(Collection<Object> results) {
 
         }
     };
 
-    OnEachCompletedListener onEachCompletedListener=new OnEachCompletedListener() {
+    OnEachCompletedListener onEachCompletedListener=new AsyncTasksExecutor.OnEachCompletedListener() {
         @Override
         public void runAfterEach(long currentTaskNumber, Object result, long tasksCompleted, long totalTasks, ThreadPoolExecutor currentExecutor, float completion) {
 
         }
     };
 
-
-    AsyncCallBack asyncCallBack = new AsyncCallBack() {
-        @Override
-        public void asyncResult(Object result) {
-
-        }
-    };
 
 
 }
