@@ -40,8 +40,6 @@ public class SimpleAsyncScheduler {
      */
 
 
-
-
     public static ThreadPoolExecutor launchTasks(int threads,Runnable...tasks){
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
         for (Runnable task:tasks){
