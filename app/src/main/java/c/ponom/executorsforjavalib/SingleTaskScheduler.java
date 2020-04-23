@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import static java.lang.Math.random;
 
 @SuppressWarnings("WeakerAccess")
-public  class SingleTaskExecutor {
+public  class SingleTaskScheduler {
 
 
     /*

@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
-public class AsyncExecutorSubmitTasksTest {
+public class AsyncTasksSchedulerTest_Done {
 
 
 
@@ -45,8 +45,13 @@ public class AsyncExecutorSubmitTasksTest {
 
 
 
-     /* сравниваем число фактических вызовов слушателей от запрошенного,
-      а так же проверяем полученные коллекции */
+     /* Тестируется:
+      1. Число фактических вызовов OnEachCompletedListener на исполнение каждой задачи от числа задач,
+      однократность вызова OnCompletedListener на каждый набор задач
+      2. Правильность всех возвращаемых результатов OnEachCompletedListener,
+      то что в нем указан правильныый номер задачи по порядку выполнения
+      3. Полученная в OnCompletedListener коллекция на число записей в ней.
+       */
 
     @Test
      public void testSubmitTasksCallable() throws InterruptedException {
@@ -65,24 +70,24 @@ public class AsyncExecutorSubmitTasksTest {
             Arrays.fill(testCallableArray, unitTestCallable);
 
 
-            AsyncTasksExecutor myExecutor = new AsyncTasksExecutor();
+            AsyncTasksScheduler myExecutor = new AsyncTasksScheduler();
             myExecutor.submitTasks((int) (10f * random() + 1),
                     onCompletedListener, onEachCompletedListener, null, testCallableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
 
-            myExecutor = new AsyncTasksExecutor();
+            myExecutor = new AsyncTasksScheduler();
             myExecutor.submitTasks((int) (30f * random() + 1),
                     onCompletedListener, onEachCompletedListener, null, testCallableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
-            myExecutor = new AsyncTasksExecutor();
+            myExecutor = new AsyncTasksScheduler();
             myExecutor.submitTasks((int) (100f * random() + 1),
                     onCompletedListener, onEachCompletedListener, null, testCallableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
 
-            myExecutor = new AsyncTasksExecutor();
+            myExecutor = new AsyncTasksScheduler();
             myExecutor.submitTasks((int) (100f * random() + 1),
                     onCompletedListener, onEachCompletedListener, null, testCallableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
@@ -115,8 +120,7 @@ public class AsyncExecutorSubmitTasksTest {
             // оно не кастится в Array, создаем новую коллекцию
             ArrayList<Long> listByOrder = new ArrayList<>(resultedCollectionByOrder);
 
-            // номера задач по порядку выполнения идут с единицы
-            // todo - переделать что бы шли с нуля
+
             for (int j = 0; j < TASKS_NUMBER/4; j++) {
 
                 // проверяем что номера выполненных задач (для первой пачки)
@@ -133,8 +137,8 @@ public class AsyncExecutorSubmitTasksTest {
             assertTrue(byOrder);
 
             // увеличение счетчика за цикл происходит дважды, в собственнно задаче
-            // и в колбэке вызываемом после выполнения каждой/assertEquals
-            // (TASKS_NUMBER * 4, resultedCollection.size());
+            // и в колбэке вызываемом после выполнения каждой
+            assertEquals (TASKS_NUMBER * 4, resultedCollection.size());
             assertEquals(TASKS_NUMBER * 4 * 2, onEachTestCounter);
 
 
@@ -178,8 +182,8 @@ public class AsyncExecutorSubmitTasksTest {
     };
 
 
-     private AsyncTasksExecutor.OnCompletedListener onCompletedListener
-            = new AsyncTasksExecutor.OnCompletedListener() {
+     private AsyncTasksScheduler.OnCompletedListener onCompletedListener
+            = new AsyncTasksScheduler.OnCompletedListener() {
         @Override
         public void runAfterCompletion(Collection<Object> results) {
 
@@ -196,8 +200,8 @@ public class AsyncExecutorSubmitTasksTest {
     };
 
 
-    private AsyncTasksExecutor.OnEachCompletedListener onEachCompletedListener
-            = new AsyncTasksExecutor.OnEachCompletedListener() {
+    private AsyncTasksScheduler.OnEachCompletedListener onEachCompletedListener
+            = new AsyncTasksScheduler.OnEachCompletedListener() {
         @Override
         public void runAfterEach(long currentTaskNumber,
                                  Object result,

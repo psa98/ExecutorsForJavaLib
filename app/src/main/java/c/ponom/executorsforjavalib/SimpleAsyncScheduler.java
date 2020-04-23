@@ -5,7 +5,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @SuppressWarnings("WeakerAccess")
-public class SimpleAsyncExecutor {
+public class SimpleAsyncScheduler {
 
     /**
      * <p> Метод  создает экзекьютор с указанным числом потоков, которому
@@ -24,7 +24,7 @@ public class SimpleAsyncExecutor {
      * синхронизированной коллекции, с учетом требований к многопоточному коду.
      *
      * @return
-     * Экзекьютор, в котором при желании можно вызвать управляющие им методы, доступные после шатдауна
+     * Экзекьютор, в котором при желании можно вызвать управляющие им методы, доступные после шатдауна,
      * по крайней мере пока он жив - получить текущую очередь заданий, число выполненных и активных
      * заданий, вызвать shutdownNow() и тому подобное
      *

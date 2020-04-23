@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 
 @SuppressWarnings("WeakerAccess")
-public  class AsyncTasksExecutor {
+public  class AsyncTasksScheduler {
 
     int  tasksCompleted= 0;
     // Общая информация по итогам написания

@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 
 
 
-public class SimpleAsyncUnitTest_Done {
+public class SimpleAsyncSchedulerTest_Done {
 
     private static final int REPETITIONS_COUNTER =10;
     private static final int TARGET_TASKS_COUNT =100;
@@ -27,6 +27,13 @@ public class SimpleAsyncUnitTest_Done {
     private final ArrayList<Integer> commonArray= new ArrayList<>();
 
 
+      /* Тестируется:
+       1.   То, что отрабатывают все X посланных заданий за разумное
+            время, причем исключения не влияют на это (обработанные в run или
+            ушедшие наверх в call),
+       2.    что в пределах синхронизированного блока можно работать с общими данными
+       */
+
     @Test
     public void testLaunchTasksRunnable() throws InterruptedException {
 
@@ -37,10 +44,14 @@ public class SimpleAsyncUnitTest_Done {
         Callable[] testCallableArray = new Callable[TARGET_TASKS_COUNT];
         Arrays.fill(testCallableArray, unitTestCallable);
 
-        // убеждаемся что отрабатывают все X посланных заданий за разумное
-        // время, причем эксепшны не влияют на это (обработанные в run или
-        // ушедшие наверх в call), и что в пределах синхронизированного блока
-        // можно работать с общими данными
+        /*
+        1. убеждаемся что отрабатывают все X посланных заданий за разумное
+        время, причем исключения  не влияют на это (обработанные в run или
+        ушедшие наверх в call)
+        2. что в пределах синхронизированных блоков
+        задачи и коллбэка можно работать с общими данными
+
+        */
 
         for (int batch = 1; batch != REPETITIONS_COUNTER; batch++) {
 
@@ -49,17 +60,17 @@ public class SimpleAsyncUnitTest_Done {
             commonArray.clear();
 
 
-            SimpleAsyncExecutor.launchTasks((int) (10 * random() + 1), testRunnableArray)
+            SimpleAsyncScheduler.launchTasks((int) (10 * random() + 1), testRunnableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
-            SimpleAsyncExecutor.launchTasks((int) (20 * random() + 1), testRunnableArray)
+            SimpleAsyncScheduler.launchTasks((int) (20 * random() + 1), testRunnableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
-            SimpleAsyncExecutor.launchTasks((int) (50 * random() + 1), testRunnableArray)
+            SimpleAsyncScheduler.launchTasks((int) (50 * random() + 1), testRunnableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
 
-            SimpleAsyncExecutor.launchTasks((int) (100 * random() + 1), testRunnableArray).
+            SimpleAsyncScheduler.launchTasks((int) (100 * random() + 1), testRunnableArray).
                     awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
 
@@ -70,23 +81,19 @@ public class SimpleAsyncUnitTest_Done {
             runnableTasksCounter = 0;
 
 
-            SimpleAsyncExecutor.launchTasks((int) (10 * random() + 1), testCallableArray)
+            SimpleAsyncScheduler.launchTasks((int) (10 * random() + 1), testCallableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
-            SimpleAsyncExecutor.launchTasks((int) (20 * random() + 1), testCallableArray)
-                    .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
-
-
-            SimpleAsyncExecutor.launchTasks((int) (50 * random() + 1), testRunnableArray)
+            SimpleAsyncScheduler.launchTasks((int) (20 * random() + 1), testCallableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
 
-            SimpleAsyncExecutor.launchTasks((int) (100 * random() + 1), testRunnableArray)
+            SimpleAsyncScheduler.launchTasks((int) (50 * random() + 1), testRunnableArray)
                     .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
-            ;
 
 
-            //Thread.sleep(TIMEOUT);
+            SimpleAsyncScheduler.launchTasks((int) (100 * random() + 1), testRunnableArray)
+                    .awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
             System.out.println("Runnable count "+runnableTasksCounter);
             System.out.println("Callable count "+callableTasksCounter);
@@ -140,17 +147,18 @@ public class SimpleAsyncUnitTest_Done {
                 commonArray.add(callableTasksCounter);
                 // тут может находиться код, работающий с общими данными при использовании
                 // общего мутекса
-
+                double result =random();
                 try {
-                    // тестируем влияние на работу эксепшнов - их надо обработать в Runnable
-                    if (random() < PERCENT_OF_EXCEPTIONS) i = 42 / 0;
+                    // тестируем влияние на работу эксепшнов
+                    //
+                    if ( result< PERCENT_OF_EXCEPTIONS) i = 42 / 0;
 
                 } catch (Exception e) {
-                    //e.printStackTrace();
+                    /// e.printStackTrace(); // обработка исключения,
+                    // или, возможно, возврат его как результата через return exception;
                 }
-            }
-        return null;
-        }
+            return result;}
+       }
     };
 
 }

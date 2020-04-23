@@ -14,13 +14,13 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import c.ponom.executorsforjavalib.AsyncTasksExecutor.OnEachCompletedListener;
+import c.ponom.executorsforjavalib.AsyncTasksScheduler.OnEachCompletedListener;
 
 
-public class AsyncExecutorExample extends AppCompatActivity
+public class AsyncSchedulerExample extends AppCompatActivity
 {
     final static String TAG="AsyncTestCompat";
-    AsyncTasksExecutor myExecutor;
+    AsyncTasksScheduler myExecutor;
     static int counter;
     static Runnable[] tasks;
     static Callable[] taskLists;
@@ -45,7 +45,7 @@ public class AsyncExecutorExample extends AppCompatActivity
             public void onClick(View view) {
                 Snackbar.make(view, "Go!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                myExecutor = new AsyncTasksExecutor();
+                myExecutor = new AsyncTasksScheduler();
                 launchThreads();
             }
         });
@@ -140,14 +140,14 @@ public class AsyncExecutorExample extends AppCompatActivity
     };
 
 
-    AsyncTasksExecutor.OnCompletedListener onCompletedListener = new AsyncTasksExecutor.OnCompletedListener() {
+    AsyncTasksScheduler.OnCompletedListener onCompletedListener = new AsyncTasksScheduler.OnCompletedListener() {
         @Override
         public void runAfterCompletion(Collection<Object> results) {
 
         }
     };
 
-    OnEachCompletedListener onEachCompletedListener=new AsyncTasksExecutor.OnEachCompletedListener() {
+    OnEachCompletedListener onEachCompletedListener=new AsyncTasksScheduler.OnEachCompletedListener() {
         @Override
         public void runAfterEach(long currentTaskNumber, Object result, long tasksCompleted, long totalTasks, ThreadPoolExecutor currentExecutor, float completion) {
 

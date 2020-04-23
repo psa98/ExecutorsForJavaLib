@@ -13,22 +13,23 @@ import static java.lang.Math.random;
 import static org.junit.Assert.assertEquals;
 
 
-public class SingleTaskExecutorTest_Done {
+public class SingleTaskSchedulerTest_Done {
 
 
 
     private static final float PERCENT_OF_ERRORS = 0.1f;
-    private static final int TASK_COUNTER = 50;
     private static final int TIMEOUT = 500; // mseconds
     private static final int NUMBER_OF_TESTS=50;
     private static final int NUMBER_OF_TASKS=100;
-    private int tasksCounter;
-
-
-
     private int completionTestCounter;
+
+
+
+
+
     private static final Object mutexCallback =new Object();
     private static final Object mutexTask =new Object();
+
     // todo = посмотреть что можно сделать с передачей мутексов тут и в других классах, как у синх. коллекций
 
     private final Collection<Object> resultedCollection =
@@ -37,7 +38,9 @@ public class SingleTaskExecutorTest_Done {
 
      /* сравниваем число фактических вызовов коллбэка от запрошенного,
       а так же проверяем итоговые   коллекции */
-     //todo - разобраться с возвращаемой парой
+        //todo - разобраться с возвращаемой парой для мокания
+        //todo - описать что тестировали
+
 
 
 
@@ -56,7 +59,7 @@ public class SingleTaskExecutorTest_Done {
 
 
                 for (int taskNumber = 0; taskNumber <NUMBER_OF_TASKS; taskNumber++) {
-                SingleTaskExecutor currentExecutor = new SingleTaskExecutor();
+                SingleTaskScheduler currentExecutor = new SingleTaskScheduler();
                 currentExecutor.submitAsyncTask(testCallableArray[taskNumber],asyncCallBack,null)
                         .awaitTermination(TIMEOUT,TimeUnit.MILLISECONDS);
                 }
@@ -83,7 +86,7 @@ public class SingleTaskExecutorTest_Done {
                 Object result;
                 //result = new Pair<>(0, 0.0); - потом переделать, этот метод не поддерживается, надо свою "пару" сделать
                 synchronized (mutexTask) {
-                tasksCounter++;
+
                 result=new Object();
                 int i=0;
                 double random =random();
@@ -107,7 +110,7 @@ public class SingleTaskExecutorTest_Done {
 
 
 
-    private SingleTaskExecutor.AsyncCallBack asyncCallBack = new SingleTaskExecutor.AsyncCallBack() {
+    private SingleTaskScheduler.AsyncCallBack asyncCallBack = new SingleTaskScheduler.AsyncCallBack() {
         @Override
          public void asyncResult(Object result) {
             synchronized (mutexCallback) {
