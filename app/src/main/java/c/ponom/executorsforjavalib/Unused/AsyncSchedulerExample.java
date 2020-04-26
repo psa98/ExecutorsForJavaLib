@@ -1,4 +1,4 @@
-package c.ponom.executorsforjavalib;
+package c.ponom.executorsforjavalib.Unused;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -14,7 +14,8 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import c.ponom.executorsforjavalib.AsyncTasksScheduler.OnEachCompletedListener;
+import c.ponom.executorsforjavalib.R;
+import c.ponom.executorsforjavalib.Unused.AsyncTasksScheduler.OnEachCompletedListener;
 
 
 public class AsyncSchedulerExample extends AppCompatActivity

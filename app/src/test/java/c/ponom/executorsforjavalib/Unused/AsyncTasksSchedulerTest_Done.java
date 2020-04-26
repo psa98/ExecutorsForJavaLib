@@ -1,16 +1,9 @@
-package c.ponom.executorsforjavalib;
-
-import org.junit.Test;
+package c.ponom.executorsforjavalib.Unused;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-import static java.lang.Math.random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -20,9 +13,9 @@ public class AsyncTasksSchedulerTest_Done {
 
 
     private static final float PERCENT_OF_ERRORS = 0.1f;
-    private static final int TASKS_NUMBER = 10000;
+    private static final int TASKS_NUMBER = 5;
     private static final int TIMEOUT = 5000; // mseconds
-    private static final int NUMBER_OF_TESTS=50;
+    private static final int NUMBER_OF_TESTS=2;
 
 
     private static int onEachTestCounter;
@@ -46,13 +39,13 @@ public class AsyncTasksSchedulerTest_Done {
 
 
      /* Тестируется:
-      1. Число фактических вызовов OnEachCompletedListener на исполнение каждой задачи от числа задач,
-      однократность вызова OnCompletedListener на каждый набор задач
-      2. Правильность всех возвращаемых результатов OnEachCompletedListener,
+      1. Число фактических вызовов OnEachCompleted на исполнение каждой задачи от числа задач,
+      однократность вызова OnCompleted на каждый набор задач
+      2. Правильность всех возвращаемых результатов OnEachCompleted,
       то что в нем указан правильныый номер задачи по порядку выполнения
-      3. Полученная в OnCompletedListener коллекция на число записей в ней.
+      3. Полученная в OnCompleted коллекция на число записей в ней.
        */
-
+/*
     @Test
      public void testSubmitTasksCallable() throws InterruptedException {
 
@@ -112,7 +105,7 @@ public class AsyncTasksSchedulerTest_Done {
             assertTrue(containsException);
 
 
-            // плюс проверка того что все вызовы onCompleted реально приходят по порядку
+            // плюс проверка того что все вызовы onFinished реально приходят по порядку
             // исполнения, а не произвольно в первой тысяче вызовов как минимум
             boolean byOrder = false;
 
@@ -182,7 +175,7 @@ public class AsyncTasksSchedulerTest_Done {
     };
 
 
-     private AsyncTasksScheduler.OnCompletedListener onCompletedListener
+     private AsyncTasksScheduler.OnCompleted onCompletedListener
             = new AsyncTasksScheduler.OnCompletedListener() {
         @Override
         public void runAfterCompletion(Collection<Object> results) {
@@ -213,6 +206,8 @@ public class AsyncTasksSchedulerTest_Done {
 
             synchronized (lockOnUnitTestCounter){
                 onEachTestCounter++;
+
+                System.out.println("currentTaskNumber = [" + currentTaskNumber + "], result = [" + result + "], tasksCompleted = [" + tasksCompleted + "], totalTasks = [" + totalTasks + "], currentExecutor = [" + currentExecutor + "], completion = [" + completion + "]");
                 resultedCollectionByOrder.add(tasksCompleted);
                 resultedCollectionByTaskNumber.add(currentTaskNumber);
             }
@@ -222,6 +217,6 @@ public class AsyncTasksSchedulerTest_Done {
 
 
 
-
+*/
 
 }
