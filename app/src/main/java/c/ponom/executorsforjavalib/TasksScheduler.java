@@ -27,13 +27,11 @@ public  class TasksScheduler {
     // точно не изменяемые другими тредами. Можно использовать имя самого внешнего класса
     // как самое надежное = this внутри класса КРОМЕ вложенных и анонимных, где
     // полностью квалифицированное имя внешнего класса
-    // todo Перспективные дополнения на будущее -
-    // жесткий таймаут на исполнение задачи, кто не успел - получает эксепшен.
-    // таймаутов можно несколько - от пуска процесса общий и индивидуальный на каждую задачу.
 
 
 
-    final Collection<Object> results= Collections.synchronizedList(new ArrayList<>());
+    final Collection<ResultedRecord> resultsByTaskOrder =
+            Collections.synchronizedList(new ArrayList<ResultedRecord>());
     int totalTasks = 0;
 
     final Object innerLock = new Object();
@@ -154,7 +152,8 @@ public  class TasksScheduler {
                 final Object finalResult = result;
 
                 synchronized (innerLock) {
-                    results.add(finalResult);
+                    final ResultedRecord resultedRecord = new ResultedRecord(tasksCompleted,arguments,result);
+                    resultsByTaskOrder.add(resultedRecord);
                     // число выполненных задач считается с единицы, не с 0
                     tasksCompleted++;
                     final double completionPercent = (((float) tasksCompleted )/( (float) totalTasks)) * 100f;
@@ -191,13 +190,13 @@ public  class TasksScheduler {
                     // обеспечение вызова завершающего кода
                         if (onCompleted == null) return null;
                         else if (activity == null) {
-                            onCompleted.runAfterCompletion(results);
+                            onCompleted.runAfterCompletion(resultsByTaskOrder);
                             return null;
                         } else {
                             activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    onCompleted.runAfterCompletion(results);
+                                    onCompleted.runAfterCompletion(resultsByTaskOrder);
                                 }
                             });
                         }
@@ -213,7 +212,7 @@ public  class TasksScheduler {
 
     interface OnCompleted {
 
-        void runAfterCompletion(Collection<Object> results);
+        void runAfterCompletion(Collection<ResultedRecord> results);
         // по завершению исполнения всех задач возвращается коллекция, содержащая
         // их результаты в порядке TODO ?постановки? или исполнения??
 
@@ -233,5 +232,18 @@ public  class TasksScheduler {
                           double completion, // число выполненных задач от общего, в %
                           Object...argument);
     }
+
+    public class ResultedRecord {
+        int recordNumber;
+        Object[] arguments;
+        Object result;
+
+        public ResultedRecord(int recordNumber, Object[] arguments, Object result) {
+            this.recordNumber = recordNumber;
+            this.arguments = arguments;
+            this.result = result;
+        }
+
+}
 
 }

@@ -13,6 +13,8 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.Collection;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import c.ponom.executorsforjavalib.TasksScheduler.ResultedRecord;
+
 import static java.lang.Math.floor;
 
 
@@ -35,13 +37,13 @@ public class TaskSchedulerExample extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "See results", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "See resultsByTaskOrder", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
 
 
                 Task[] tasks = new Task[TASKS_NUMBER];
                 for (int i = 0; i <TASKS_NUMBER; i++)
-                    tasks[i] = createTaskTwoArguments(2,i);
+                    tasks[i] = createTaskTwoArguments(i,2);
 
                 //for (int i = 0; i <TASKS_NUMBER; i++)
                 //    tasks[i] = createTaskOneArgument(i);
@@ -105,7 +107,7 @@ public class TaskSchedulerExample extends AppCompatActivity
 
                 Integer finalArgument = (Integer) argument[0];
                 // put your code for doing task here
-                // в данном случае мы возводим единственный аргумент в квадрат
+                // в данном случае мы умножаем аргумент на 3
 
 
                 if (finalArgument==10) throw new ArithmeticException();
@@ -155,9 +157,9 @@ public class TaskSchedulerExample extends AppCompatActivity
 
 
         @Override
-        public void runAfterCompletion(Collection<Object> results) {
+        public void runAfterCompletion(Collection<ResultedRecord> resultedRecordCollection) {
             System.out.println("Done with tasks. We got result for  " +
-                    "onFinished with array size  ="+results.size());
+                    "onFinished with array size  ="+resultedRecordCollection.size());
             System.out.println("Current thread ="+Thread.currentThread().getName());
         }
     };
