@@ -20,7 +20,7 @@ import static java.lang.Math.floor;
 
 public class TaskSchedulerExample extends AppCompatActivity
 {
-    final static String TAG="TaskTest";
+
     TasksScheduler currentExecutor;
     int TASKS_NUMBER= 20;
 
@@ -86,6 +86,7 @@ public class TaskSchedulerExample extends AppCompatActivity
                 int argument1 = (int) arguments[0];
                 int argument2 = (int) arguments[1];
 
+
                 // в данном случае мы перемножаем два аргумента
                 return argument1*argument2;
 
@@ -132,8 +133,7 @@ public class TaskSchedulerExample extends AppCompatActivity
                                  long totalTasks,
                                  long currentTaskByExecutionNumber, ThreadPoolExecutor currentExecutor,
                                  double completion, Object... argument) {
-            //todo - итоговую таблицу можно собрать и на кортежах = номер задачи, аргумент, результат.
-            //Или на нормальных Pair<F;S> - они есть в коде Андроида, но не в стандартной Java
+
             int varargsSize=argument.length;
             String argument2= (varargsSize==2)? "argument 2 = ["  +argument[1]+"]":" none";
 

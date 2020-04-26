@@ -5,6 +5,7 @@ import android.app.Activity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -33,11 +34,9 @@ public  class TasksScheduler {
      * обеспечивается последовательное исполнение переданных задач, для большего количества
      * порядок исполнения может быть любым.
      * @param
-     * onCompleted,  - исполняется один раз после полного исполнения всех переданных задач.
-     * получает список объектов, содержащий результаты исполнения каждой задачи в порядке исполнения
-     * Если необходимо получить и порядковые номера преданных задач - возвращать  следует кортеж или
-     * иной составной объект, соответсвенно изменив тип возвращаемого в переопределенном методе
-     * doTask() задачи. При появлении исключения оно будет включено в качестве результата задачи.
+     * onCompleted,  - исполняется один раз после полного исполнения всех переданных задач,
+     * возвращает список переданных задач по порядку, соответствующему исходному в пакете задач.
+     * Необработанные исключения будет включены в результат задачи как объект подтипа Exception.
      * Если аргумент = null -  вызовы не осуществляются.
      *
      * @param
@@ -52,7 +51,8 @@ public  class TasksScheduler {
      * activity - при передаче сюда активности, методы-слушатели вызываются в ее потоке,
      * при передаче null = в отдельном. Передача параметра в качестве параметра текущей активности
      * позволяет вызывать методы изменения ее ui внутри onCompleted/nEachCompleted.
-     * (перед этим следует проверить существование активности на момент вызова)
+     * Перед этим следует всегда проверять существование активности, и, возможно, состояние ее
+     * жизненного цикла на момент вызова.
      *
      * @return возвращает  ThreadPoolExecutor, у которого можно в любой момент  запросить
      * внутренними методами, к примеру, данные о числе выполненных и выполняемых задач, получить
@@ -67,7 +67,8 @@ public  class TasksScheduler {
      */
 
 
-    // todo - сделать возможность передачи аргумента в виде списка, а не только массива
+
+    @SuppressWarnings("UnusedReturnValue")
     public ThreadPoolExecutor submitTasks(int numberOfThreads,
                                           OnCompleted onCompleted,
                                           OnEachCompleted onEachCompleted,
@@ -96,11 +97,25 @@ public  class TasksScheduler {
     }
 
 
+    @SuppressWarnings({"UnusedReturnValue", "unused"})
+    public ThreadPoolExecutor submitTasks(int numberOfThreads,
+                                          OnCompleted onCompleted,
+                                          OnEachCompleted onEachCompleted,
+                                          Activity activity,
+                                          List<Task> listOfTasks)  {
+
+        final Task[] arrayOfTasks = (Task[]) listOfTasks.toArray();
+
+        return submitTasks(numberOfThreads,onCompleted,
+        onEachCompleted, activity, arrayOfTasks);
+
+    }
 
 
 
 
-    /* метод  при необходимости обрамляет переданную задачу переданными  в него обратными
+
+    /* метод  "обрамляет" переданную задачу переданными  в него обратными
     вызовами */
 
     private Task boxTask(final Task nextTask,
@@ -111,12 +126,13 @@ public  class TasksScheduler {
                              final ThreadPoolExecutor currentExecutor){
 
 
+            @SuppressWarnings("UnnecessaryLocalVariable")
             final Task boxedTask =new Task(nextTask.getArguments()) {
                 @Override
-                public Object doTask(final Object...arguments) throws Exception {
+                public Object doTask(final Object...arguments)  {
 
 
-                Object result = null;
+                Object result;
 
                 try{
                 result = nextTask.doTask(arguments);
@@ -126,10 +142,10 @@ public  class TasksScheduler {
 
                     result=exception;
                 }
-                /* когда мы попадаем сюда, у нас:
-                В result будет результат кода, либо объект Exception если была ошибка.
+                /* когда мы попадаем сюда, у нас в result будет результат кода, либо объект
+                Exception если была ошибка.
                 Если Exception  возвращается в качестве результата, получатель сам
-                анализирует причины появления
+                анализирует причины ее появления
                 */
 
 
@@ -199,7 +215,8 @@ public  class TasksScheduler {
 
         /**
          * @param results - по завершению исполнения всех задач возвращается коллекция, содержащая
-         * результаты их исполения в порядке постановки.
+         * результаты их исполнения в порядке постановки, порядковый номер и переданные в задачу
+         * аргументы.
          */
 
         void runAfterCompletion(Collection<ResultedRecord> results);

@@ -11,7 +11,7 @@ public  abstract class Task {
     private Object[] argument = null;
 
 
-    final public Callable getCallableForExecutor() {
+     final public   Callable getCallableForExecutor() {
         return callableForExecutor;
     }
 
@@ -28,7 +28,18 @@ public  abstract class Task {
     }
 
 
-
+    /**
+     * @param argument      Переопределите эту задачу для выполнения каждого задания пакета,
+     *                      аргументы следует при необходимости привести к нужному виду, а при
+     *                      использовании varargs - проверить состав и размер получаемого массива
+     *
+     * @return              Верните результат выполнения задачи. В случае необходимости передачи
+     *                      сообщения об ошибке - можно передать соответствущее исключение в качетстве
+     *                      результата, включив в ветку catch  ...return exception;}
+     *
+     * @throws Exception    В случае если исключения не обрабатываются, они будут проброшены выше и
+     *                      включены в соответвующий результат в качестве объекта Exception
+     */
     abstract public Object doTask(Object... argument)  throws Exception;
 
 
