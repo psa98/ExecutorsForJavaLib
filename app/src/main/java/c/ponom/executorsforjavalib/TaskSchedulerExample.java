@@ -112,7 +112,7 @@ public class TaskSchedulerExample extends AppCompatActivity
 
                 if (finalArgument==10) throw new ArithmeticException();
 
-                return finalArgument * 2;
+                return finalArgument * 3;
 
             }
         };
