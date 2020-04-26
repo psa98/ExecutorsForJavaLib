@@ -10,6 +10,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -37,7 +38,7 @@ public class TaskSchedulerExample extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "See resultsByTaskOrder", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "See resultsByExecutionOrder", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
 
 
@@ -51,7 +52,7 @@ public class TaskSchedulerExample extends AppCompatActivity
 
                 currentExecutor = new TasksScheduler();
                 currentExecutor.submitTasks(10,
-                        onFinished,
+                        onCompleted,
                         onEachCompleted,
                         (Activity) view.getContext(),tasks);
 
@@ -153,11 +154,11 @@ public class TaskSchedulerExample extends AppCompatActivity
 
 
 
-    TasksScheduler.OnCompleted onFinished = new TasksScheduler.OnCompleted(){
+    TasksScheduler.OnCompleted onCompleted = new TasksScheduler.OnCompleted(){
 
 
         @Override
-        public void runAfterCompletion(Collection<ResultedRecord> resultedRecordCollection) {
+        public void runAfterCompletion(Collection<ResultedRecord> resultedRecordCollection, Collection<ResultedRecord> resultsByTaskOrder) {
             System.out.println("Done with tasks. We got result for  " +
                     "onFinished with array size  ="+resultedRecordCollection.size());
             System.out.println("Current thread ="+Thread.currentThread().getName());

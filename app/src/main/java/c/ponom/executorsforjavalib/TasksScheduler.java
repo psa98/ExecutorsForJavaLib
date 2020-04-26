@@ -5,6 +5,7 @@ import android.app.Activity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -16,13 +17,23 @@ public  class TasksScheduler {
 
 
 
-    final Collection<ResultedRecord> resultsByTaskOrder =
+    final Collection<ResultedRecord> resultsByExecutionOrder =
             Collections.synchronizedList(new ArrayList<ResultedRecord>());
+
     int totalTasks = 0;
 
     final Object innerLock = new Object();
     ThreadPoolExecutor currentExecutor=null;
     int  tasksCompleted= 0;
+    Comparator<ResultedRecord> comparator = new Comparator<ResultedRecord>() {
+        @Override
+        public int compare(ResultedRecord resultedRecord1, ResultedRecord resultedRecord2) {
+            return Integer.compare(resultedRecord1.taskNumber, resultedRecord2.taskNumber);
+        }
+
+
+
+    };
 
     /**
      *
@@ -153,8 +164,8 @@ public  class TasksScheduler {
                 final Object finalResult = result;
 
                 synchronized (innerLock) {
-                    final ResultedRecord resultedRecord = new ResultedRecord(tasksCompleted,arguments,result);
-                    resultsByTaskOrder.add(resultedRecord);
+                    final ResultedRecord resultedRecord = new ResultedRecord(currentTaskNumber,arguments,result);
+                    resultsByExecutionOrder.add(resultedRecord);
                     // число выполненных задач считается с единицы, не с 0
                     tasksCompleted++;
                     final double completionPercent = (((float) tasksCompleted )/( (float) totalTasks)) * 100f;
@@ -190,14 +201,18 @@ public  class TasksScheduler {
 
                     // обеспечение вызова завершающего кода
                         if (onCompleted == null) return null;
-                        else if (activity == null) {
-                            onCompleted.runAfterCompletion(resultsByTaskOrder);
+                        final ArrayList<ResultedRecord> resultsByTaskOrder =
+                            new ArrayList<>(resultsByExecutionOrder);
+                        Collections.sort(resultsByTaskOrder,comparator);
+                        if (activity == null) {
+
+                            onCompleted.runAfterCompletion(resultsByExecutionOrder,resultsByTaskOrder);
                             return null;
                         } else {
                             activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    onCompleted.runAfterCompletion(resultsByTaskOrder);
+                                    onCompleted.runAfterCompletion(resultsByExecutionOrder, resultsByTaskOrder);
                                 }
                             });
                         }
@@ -214,12 +229,18 @@ public  class TasksScheduler {
     interface OnCompleted {
 
         /**
-         * @param results - по завершению исполнения всех задач возвращается коллекция, содержащая
-         * результаты их исполнения в порядке постановки, порядковый номер и переданные в задачу
+         * @param resultsByExecutionOrder - по завершению исполнения всех задач возвращается коллекция,
+         * содержащая результаты их исполнения в порядке исполнения, порядковый номер и переданные в задачу
          * аргументы.
+         *
+         * @param resultsByTaskOrder - та же коллекция результатов, отсортированная по порядку переданных
+         * в метод submitTasks(...) задач
+         *
+         * @param resultsByTaskOrder
          */
 
-        void runAfterCompletion(Collection<ResultedRecord> results);
+        void runAfterCompletion(Collection<ResultedRecord> resultsByExecutionOrder,
+                                Collection<ResultedRecord>resultsByTaskOrder);
         // по завершению исполнения всех задач возвращается коллекция, содержащая
         // их результаты в порядке постановки.
 
@@ -259,15 +280,22 @@ public  class TasksScheduler {
     }
 
     public class ResultedRecord {
-        int recordNumber;
-        Object[] arguments;
-        Object result;
+        public int taskNumber;
+
+
+        public Object[] arguments;
+        public Object result;
+
+
 
         public ResultedRecord(int recordNumber, Object[] arguments, Object result) {
-            this.recordNumber = recordNumber;
+            this.taskNumber = recordNumber;
             this.arguments = arguments;
             this.result = result;
         }
+
+
+
 
 }
 
