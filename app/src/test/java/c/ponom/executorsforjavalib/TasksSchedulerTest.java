@@ -16,18 +16,21 @@ import static org.junit.Assert.*;
 
 public class TasksSchedulerTest {
 
-    private static final int TASKS_NUMBER = 100;
+    private static final int TASKS_NUMBER = 500;
     private static final long TIMEOUT =2000 ;
     private static final int THREAD_NUMBER = 20;
     private Task[] tasksOneArgument= new Task[TASKS_NUMBER];
     private Task[] tasksTwoArguments= new Task[TASKS_NUMBER];
     private List<Task>  tasksOneArgumentList=new ArrayList<>();
     private List<Task>  tasksTwoArgumentsList=new ArrayList<>();
-    private ArrayList<ResultedRecord> resultedRecordsByExecution =new ArrayList<>();
-    private ArrayList<ResultedRecord> resultedRecordsByTaskOrder =new ArrayList<>();
-    private ArrayList<Object> resultsByOnEach = new ArrayList<>();
+    private Collection<ResultedRecord> resultedRecordsByExecution =
+            Collections.synchronizedCollection(new ArrayList<ResultedRecord>());
+
+    private Collection<ResultedRecord> resultedRecordsByTaskOrder
+            = Collections.synchronizedCollection(new ArrayList<ResultedRecord>());
+
     private Collection<Object> resultsByOnEachSynchronized =
-            Collections.synchronizedCollection(resultsByOnEach);
+            Collections.synchronizedCollection(new ArrayList<Object>());
     private ThreadPoolExecutor currentExecutor;
 
 
@@ -36,35 +39,45 @@ public class TasksSchedulerTest {
     public void submitTasksTest() throws Exception {
         prepareTasks();
 
+
+        // проверяем собранные после вызовов слушателей коллекции (для одного аргумента):
+
         TasksScheduler tasksScheduler = new TasksScheduler();
         currentExecutor
                 = tasksScheduler.submitTasks(THREAD_NUMBER,
                 onCompleted,
                 onEachCompleted,
-                null,
                 tasksOneArgument);
         currentExecutor.awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
-        // проверяем собранные после вызовов слушателей коллекции:
+        isInAscendingOrder(resultedRecordsByTaskOrder);
+        isArgumentSquared(resultedRecordsByExecution);
+
+        assertEquals(resultsByOnEachSynchronized.size(),TASKS_NUMBER);
+        // проверяем что этот метод вызывался положенное количество раз
+
+
+        resultedRecordsByExecution.clear();
+        resultedRecordsByTaskOrder.clear();
+        resultsByOnEachSynchronized.clear();
+
+
 
 
         tasksScheduler = new TasksScheduler();
-        currentExecutor= tasksScheduler.submitTasks(10,
+        currentExecutor
+                = tasksScheduler.submitTasks(THREAD_NUMBER,
                 onCompleted,
                 onEachCompleted,
-                null,
-                tasksOneArgument);
+                tasksTwoArguments);
         currentExecutor.awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
-        tasksOneArgumentList = Arrays.asList(tasksOneArgument);
-        tasksTwoArgumentsList = Arrays.asList(tasksTwoArguments);
-        containsExceptions(resultsByOnEachSynchronized,new Exception());
+
         isInAscendingOrder(resultedRecordsByTaskOrder);
         isArgumentTripled(resultedRecordsByExecution);
 
-        // проверяем собранные после вызовов слушателей коллекции (для одного аргумента):
-
-
+        resultedRecordsByTaskOrder.clear();
+        resultedRecordsByExecution.clear();
 
     }
 
@@ -81,13 +94,12 @@ public class TasksSchedulerTest {
 
         for (int i = 0; i <TASKS_NUMBER; i++)
             tasksOneArgument[i] = createTaskOneArgument(i);
-        // результат д.б. равен i в квадрате * 2
+        // результат д.б. равен i в квадрате
 
 
         for (int i = 0; i <TASKS_NUMBER; i++)
             tasksTwoArguments[i] = createTaskTwoArguments(i,3);
         // результат д.б. равен произведению первого аргумента на 3 (фиксированный второй аргумент)
-
         // ДЛЯ ВСЕХ АРГУМЕНТОВ каждый 10й бросает исключение
 
 
@@ -113,17 +125,21 @@ public class TasksSchedulerTest {
 
 
     // проверка успешности проброса исключений в результирующую коллекцию и результаты сборной коллекции из
-    // onEach
-    private void containsExceptions(Collection collection, Exception exception){
+    /*onEach
+    private boolean containsExceptions(Collection collection, Exception exception) {
         boolean result = false;
-        for (Object record:collection)
-            if (record instanceof Exception) result =true;
+        for (Object record : collection) {
+            if (((ResultedRecord)record).result instanceof Exception) {
+               return  true;
 
-            assertTrue(result);
             }
+        }
+        return false;
 
+    }
 
-    private void isInAscendingOrder(ArrayList<ResultedRecord> collection){
+*/
+    private void isInAscendingOrder(Collection<ResultedRecord> collection){
         // номера записей в итоговой коллекции должны идти последовательно через единицу
         long lastNumber=-1; // номера коллекций начинаются с 0,
                             // это решит проблему с чем  сравнивать запись [0]
@@ -134,11 +150,25 @@ public class TasksSchedulerTest {
         }
     }
 
-    private void isArgumentTripled(ArrayList<ResultedRecord> results) {
-        for (int i = 0; i < TASKS_NUMBER; i++)
-            assertEquals(i*3,(int)results.get(i).arguments[0]);
+    private void isArgumentTripled(Collection<ResultedRecord> results) {
+        for (ResultedRecord record:results)
+        {
+            if (record.result instanceof Exception) break;
+            int argument = (int)record.arguments[0];
+            assertEquals( argument*3,(int)record.result);
+        }
     }
 
+
+
+    private void isArgumentSquared(Collection<ResultedRecord> results) {
+        for (ResultedRecord record:results)
+        {
+            if (record.result instanceof Exception) break;
+            int argument = (int)record.arguments[0];
+            assertEquals( argument*argument,(int)record.result);
+        }
+    }
 
 
 
@@ -167,7 +197,8 @@ public class TasksSchedulerTest {
                 int argument2 = (int) arguments[1];
 
 
-                // в данном случае мы умножаем первый на второй, равный в данном случае  трем
+                // в данном случае мы умножаем первый аргумент на второй,
+                // равный в данном случае для целей теста  трем
                 return argument1*argument2;
 
             }
@@ -187,14 +218,13 @@ public class TasksSchedulerTest {
                 // переданного единственного объекта
 
                 Integer finalArgument = (Integer) argument[0];
-                // put your code for doing task here
-                // в данном случае мы умножаем аргумент на 3
-
+                // в данном случае мы возводим аргумент в квадрат
                 // для тестирования  что исключения правильно передаются -
                 // каждый 10й объект бросит исключение
+
                 if ((int)arguments[0] %10 ==9 ) throw new ArithmeticException();
 
-                return finalArgument *  finalArgument *2;
+                return finalArgument *  finalArgument;
 
             }
         };
@@ -208,17 +238,16 @@ public class TasksSchedulerTest {
             new TasksScheduler.OnEachCompleted(){
 
                 @Override
-                public void runAfterEach(long currentTaskNumber,
+                public void runAfterEach(int currentTaskNumber,
                                          Object result,
-                                         long totalTasks,
-                                         long currentTaskByExecutionNumber, ThreadPoolExecutor currentExecutor,
+                                         int totalTasks,
+                                         int currentTaskByExecutionNumber, ThreadPoolExecutor currentExecutor,
                                          double completion, Object... argument) {
 
-
-                    resultsByOnEachSynchronized.add(result);
-
-
-                }
+                    String data;
+                    data=currentTaskNumber+" / "+result.toString()+" /  "+argument [0].toString();
+                    resultsByOnEachSynchronized.add(data);
+               }
 
             };
 

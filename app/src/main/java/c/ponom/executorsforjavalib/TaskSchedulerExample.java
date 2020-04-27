@@ -1,6 +1,5 @@
 package c.ponom.executorsforjavalib;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 
@@ -10,7 +9,6 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -54,7 +52,7 @@ public class TaskSchedulerExample extends AppCompatActivity
                 currentExecutor.submitTasks(10,
                         onCompleted,
                         onEachCompleted,
-                        (Activity) view.getContext(),tasks);
+                        tasks);
 
 
             }
@@ -129,10 +127,10 @@ public class TaskSchedulerExample extends AppCompatActivity
             new TasksScheduler.OnEachCompleted(){
 
         @Override
-        public void runAfterEach(long currentTaskNumber,
+        public void runAfterEach(int currentTaskNumber,
                                  Object result,
-                                 long totalTasks,
-                                 long currentTaskByExecutionNumber, ThreadPoolExecutor currentExecutor,
+                                 int totalTasks,
+                                 int currentTaskByExecutionNumber, ThreadPoolExecutor currentExecutor,
                                  double completion, Object... argument) {
 
             int varargsSize=argument.length;

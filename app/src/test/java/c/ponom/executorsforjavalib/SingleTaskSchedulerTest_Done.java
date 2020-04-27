@@ -10,7 +10,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.random;
-import static org.junit.Assert.assertEquals;
 
 
 public class SingleTaskSchedulerTest_Done {

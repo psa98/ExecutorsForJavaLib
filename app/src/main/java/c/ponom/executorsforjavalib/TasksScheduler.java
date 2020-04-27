@@ -58,12 +58,6 @@ public  class TasksScheduler {
      *
      * @param
      * tasks - Callable, их массив или список, передаваемый на исполнение
-     * @param
-     * activity - при передаче сюда активности, методы-слушатели вызываются в ее потоке,
-     * при передаче null = в отдельном. Передача параметра в качестве параметра текущей активности
-     * позволяет вызывать методы изменения ее ui внутри onCompleted/nEachCompleted.
-     * Перед этим следует всегда проверять существование активности, и, возможно, состояние ее
-     * жизненного цикла на момент вызова.
      *
      * @return возвращает  ThreadPoolExecutor, у которого можно в любой момент  запросить
      * внутренними методами, к примеру, данные о числе выполненных и выполняемых задач, получить
@@ -83,7 +77,6 @@ public  class TasksScheduler {
     public ThreadPoolExecutor submitTasks(int numberOfThreads,
                                           OnCompleted onCompleted,
                                           OnEachCompleted onEachCompleted,
-                                          Activity activity,
                                           Task... tasks)  {
 
 
@@ -99,7 +92,6 @@ public  class TasksScheduler {
                     taskNumber,
                     onCompleted,
                     onEachCompleted,
-                    activity,
                     currentExecutor);
             currentExecutor.submit(boxedTask.getCallableForExecutor());
         }
@@ -118,7 +110,7 @@ public  class TasksScheduler {
         final Task[] arrayOfTasks = (Task[]) listOfTasks.toArray();
 
         return submitTasks(numberOfThreads,onCompleted,
-        onEachCompleted, activity, arrayOfTasks);
+        onEachCompleted, arrayOfTasks);
 
     }
 
@@ -133,26 +125,23 @@ public  class TasksScheduler {
                              final int currentTaskNumber,
                              final OnCompleted onCompleted,
                              final OnEachCompleted onEachCompleted,
-                             final Activity activity,
                              final ThreadPoolExecutor currentExecutor){
 
 
             @SuppressWarnings("UnnecessaryLocalVariable")
             final Task boxedTask =new Task(nextTask.getArguments()) {
                 @Override
-                public Object doTask(final Object...arguments)  {
+                public Object doTask(final Object...arguments) {
 
 
-                Object result;
+                    Object result;
 
-                try{
-                result = nextTask.doTask(arguments);
-               }
+                    try {
+                        result = nextTask.doTask(arguments);
+                    } catch (Exception exception) {
 
-                catch (  Exception exception) {
-
-                    result=exception;
-                }
+                        result = exception;
+                    }
                 /* когда мы попадаем сюда, у нас в result будет результат кода, либо объект
                 Exception если была ошибка.
                 Если Exception  возвращается в качестве результата, получатель сам
@@ -160,66 +149,40 @@ public  class TasksScheduler {
                 */
 
 
+                    final Object finalResult = result;
 
-                final Object finalResult = result;
-
-                synchronized (innerLock) {
-                    final ResultedRecord resultedRecord = new ResultedRecord(currentTaskNumber,arguments,result);
-                    resultsByExecutionOrder.add(resultedRecord);
-                    // число выполненных задач считается с единицы, не с 0
-                    tasksCompleted++;
-                    final double completionPercent = (((float) tasksCompleted )/( (float) totalTasks)) * 100f;
-                    final long currentTaskByExecutionOrder=tasksCompleted;
-                    if (onEachCompleted != null) {
-                        if (activity == null) {
+                    synchronized (innerLock) {
+                        final ResultedRecord resultedRecord = new ResultedRecord(currentTaskNumber, arguments, result);
+                        resultsByExecutionOrder.add(resultedRecord);
+                        // число выполненных задач считается с единицы, не с 0
+                        tasksCompleted++;
+                        final double completionPercent = (((float) tasksCompleted) / ((float) totalTasks)) * 100f;
+                        final int currentTaskByExecutionOrder = tasksCompleted;
+                        if (onEachCompleted != null) {
                             // счет выполненных  задач начинается с единицы
                             onEachCompleted.runAfterEach(currentTaskNumber, finalResult,
-                                    totalTasks,currentTaskByExecutionOrder ,
+                                    totalTasks, currentTaskByExecutionOrder,
                                     currentExecutor,
                                     completionPercent, arguments);
-                        } else {
-
-                            activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    onEachCompleted.runAfterEach(currentTaskNumber,
-                                            finalResult,
-                                            totalTasks,
-                                            currentTaskByExecutionOrder,
-                                            currentExecutor,
-                                            completionPercent,
-                                            arguments);
-                                }
-                            });
                         }
-                    }
-
+                        ;
 
 
                         if (tasksCompleted < totalTasks) return null;
                     } // конец блока синхронизации
 
                     // обеспечение вызова завершающего кода
-                        if (onCompleted == null) return null;
-                        final ArrayList<ResultedRecord> resultsByTaskOrder =
+                    if (onCompleted == null) return null;
+                    final ArrayList<ResultedRecord> resultsByTaskOrder =
                             new ArrayList<>(resultsByExecutionOrder);
-                        Collections.sort(resultsByTaskOrder,comparator);
-                        if (activity == null) {
+                    Collections.sort(resultsByTaskOrder, comparator);
 
-                            onCompleted.runAfterCompletion(resultsByExecutionOrder,resultsByTaskOrder);
-                            return null;
-                        } else {
-                            activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    onCompleted.runAfterCompletion(resultsByExecutionOrder, resultsByTaskOrder);
-                                }
-                            });
-                        }
+                    onCompleted.runAfterCompletion(resultsByExecutionOrder, resultsByTaskOrder);
+                    return null;
+                }};
 
-            return null;
-            }
-         };
+
+
         return boxedTask;
     }
 
@@ -269,11 +232,17 @@ public  class TasksScheduler {
          * выполняемых задач, или  сбросить все задачи  и остановить работу
          * @param completion - отношение числа выполнных задач к общему числу задач пакета, в процентах
          * @param argument Аргументы, переданные текущей  исполненной задаче
+         *
+         *
+         * Если мы в данном методе используем, к примеру, обновление элементов UI, то следует учитывать что
+         * первые  numberOfThreads задач будут исполняться одновременно, и ранее завершения исполнения
+         * первой задачи этот метод не вызывается, а потом будет вызван почти одновременно для numberOfThreads
+         * задач. Это может вызвать, к примеру, резкое движение progressBar в начале исполнения задач.
          */
-        void runAfterEach(long currentTaskNumber,
+        void runAfterEach(int currentTaskNumber,
                           Object result,
-                          long totalTasks,
-                          long currentTaskByExecutionNumber,
+                          int totalTasks,
+                          int currentTaskByExecutionNumber,
                           ThreadPoolExecutor currentExecutor,
                           double completion,
                           Object...argument);
