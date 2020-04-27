@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import c.ponom.executorsforjavalib.TasksScheduler.ResultedRecord;
 
+import static java.lang.Math.random;
 import static java.lang.Thread.sleep;
 
 public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
@@ -120,10 +121,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
 
         for (int i = 0; i <TASKS_NUMBER; i++)
-            tasksOneArgument[i] = createTaskOneArgument(i);
-
-
-
+            tasksOneArgument[i] = createTaskOneArgument((int)(random()*100));
 
     }
 
@@ -202,7 +200,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                                          ThreadPoolExecutor currentExecutor,
                                          double completion, Object... argument) {
                     try {
-                        sleep((long) (100+Math.random()));
+                        sleep((long) (100+ random()));
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

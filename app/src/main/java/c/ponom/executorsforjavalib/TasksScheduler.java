@@ -37,7 +37,7 @@ public  class TasksScheduler {
 
     /**
      *
-     * <p> Метод исполняет переданный ему список Callable, в указанном числе потоков,  с вызовом
+     * <p> Метод исполняет переданный ему список Tasks, в указанном числе потоков,  с вызовом
      * переданных в него слушателей на завершающие события исполнения потоков
      *
      * @param
@@ -57,7 +57,7 @@ public  class TasksScheduler {
      * Если аргумент = null -  вызовы не осуществляются.
      *
      * @param
-     * tasks - Callable, их массив или список, передаваемый на исполнение
+     * tasks - Tasks, их массив или список, передаваемый на исполнение
      *
      * @return возвращает  ThreadPoolExecutor, у которого можно в любой момент  запросить
      * внутренними методами, к примеру, данные о числе выполненных и выполняемых задач, получить
@@ -80,7 +80,7 @@ public  class TasksScheduler {
                                           Task... tasks)  {
 
 
-
+        if (tasks.length==0) throw new IllegalArgumentException("Tasks list is empty");
         if (currentExecutor!=null)
             throw new IllegalStateException("This scheduler has tasks or is in shutdown  mode," +
                 " make a new instance");
@@ -104,10 +104,13 @@ public  class TasksScheduler {
     public ThreadPoolExecutor submitTasks(int numberOfThreads,
                                           OnCompleted onCompleted,
                                           OnEachCompleted onEachCompleted,
-                                          Activity activity,
                                           List<Task> listOfTasks)  {
 
-        final Task[] arrayOfTasks = (Task[]) listOfTasks.toArray();
+        // Я что то запутался как это проще сделать, преобразовать список задач в
+        // типизированный массив задач, а через цикл как то коряво и неправильно
+        Task[] typedArray = new Task[]{};
+
+        final Task[] arrayOfTasks =  listOfTasks.toArray(typedArray);
 
         return submitTasks(numberOfThreads,onCompleted,
         onEachCompleted, arrayOfTasks);
@@ -152,6 +155,7 @@ public  class TasksScheduler {
                     final Object finalResult = result;
 
                     synchronized (innerLock) {
+
                         final ResultedRecord resultedRecord = new ResultedRecord(currentTaskNumber, arguments, result);
                         resultsByExecutionOrder.add(resultedRecord);
                         // число выполненных задач считается с единицы, не с 0

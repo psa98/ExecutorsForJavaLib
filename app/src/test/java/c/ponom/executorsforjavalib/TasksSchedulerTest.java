@@ -16,13 +16,13 @@ import static org.junit.Assert.*;
 
 public class TasksSchedulerTest {
 
-    private static final int TASKS_NUMBER = 500;
+    private static final int TASKS_NUMBER = 5000;
     private static final long TIMEOUT =2000 ;
-    private static final int THREAD_NUMBER = 20;
+    private static final int THREAD_NUMBER = 1;
     private Task[] tasksOneArgument= new Task[TASKS_NUMBER];
     private Task[] tasksTwoArguments= new Task[TASKS_NUMBER];
-    private List<Task>  tasksOneArgumentList=new ArrayList<>();
-    private List<Task>  tasksTwoArgumentsList=new ArrayList<>();
+    private List<Task>  tasksOneArgumentList=new ArrayList<Task>();
+    private List<Task>  tasksTwoArgumentsList=new ArrayList<Task>();
     private Collection<ResultedRecord> resultedRecordsByExecution =
             Collections.synchronizedCollection(new ArrayList<ResultedRecord>());
 
@@ -30,7 +30,7 @@ public class TasksSchedulerTest {
             = Collections.synchronizedCollection(new ArrayList<ResultedRecord>());
 
     private Collection<Object> resultsByOnEachSynchronized =
-            Collections.synchronizedCollection(new ArrayList<Object>());
+            Collections.synchronizedCollection(new ArrayList<>());
     private ThreadPoolExecutor currentExecutor;
 
 
@@ -76,15 +76,54 @@ public class TasksSchedulerTest {
         isInAscendingOrder(resultedRecordsByTaskOrder);
         isArgumentTripled(resultedRecordsByExecution);
 
-        resultedRecordsByTaskOrder.clear();
-        resultedRecordsByExecution.clear();
+
 
     }
 
 
     @Test
-    public void submitTasksAsListList() {
+    public void submitTasksAsListList() throws InterruptedException {
         prepareTasks();
+
+
+
+        //метод проверяет что submit работает и со списками
+        TasksScheduler tasksScheduler = new TasksScheduler();
+        currentExecutor
+                = tasksScheduler.submitTasks(THREAD_NUMBER,
+                onCompleted,
+                onEachCompleted,
+                tasksOneArgumentList);
+        currentExecutor.awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
+
+        isInAscendingOrder(resultedRecordsByTaskOrder);
+        isArgumentSquared(resultedRecordsByExecution);
+
+        assertEquals(resultsByOnEachSynchronized.size(),TASKS_NUMBER);
+        // проверяем что этот метод вызывался положенное количество раз
+
+
+        resultedRecordsByExecution.clear();
+        resultedRecordsByTaskOrder.clear();
+        resultsByOnEachSynchronized.clear();
+
+
+
+
+        tasksScheduler = new TasksScheduler();
+        currentExecutor
+                = tasksScheduler.submitTasks(THREAD_NUMBER,
+                onCompleted,
+                onEachCompleted,
+                tasksTwoArgumentsList);
+        currentExecutor.awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
+
+
+        isInAscendingOrder(resultedRecordsByTaskOrder);
+        isArgumentSquared(resultedRecordsByExecution);
+
+        resultedRecordsByTaskOrder.clear();
+        resultedRecordsByExecution.clear();
 
     }
 
@@ -103,8 +142,8 @@ public class TasksSchedulerTest {
         // ДЛЯ ВСЕХ АРГУМЕНТОВ каждый 10й бросает исключение
 
 
-       tasksOneArgumentList=new ArrayList<>(Arrays.asList(tasksOneArgument));
-       tasksTwoArgumentsList=new ArrayList<>(Arrays.asList(tasksOneArgument));
+       tasksOneArgumentList=new ArrayList<Task>(Arrays.asList(tasksOneArgument));
+       tasksTwoArgumentsList=new ArrayList<Task>(Arrays.asList(tasksOneArgument));
 
     }
 
@@ -175,6 +214,7 @@ public class TasksSchedulerTest {
 
     private Task createTaskTwoArguments(final Object... arguments){
         return new Task(arguments){
+            @SuppressWarnings("RedundantThrows")
             @Override
             public Object doTask(final Object...arguments) throws Exception {
 
@@ -208,6 +248,7 @@ public class TasksSchedulerTest {
 
     private Task createTaskOneArgument(final Object... arguments){
         return new Task(arguments){
+            @SuppressWarnings("RedundantThrows")
             @Override
             public Object doTask(final Object...argument) throws Exception {
 
