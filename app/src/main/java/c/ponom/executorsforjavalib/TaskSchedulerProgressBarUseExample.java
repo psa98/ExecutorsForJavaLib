@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -45,6 +46,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
     private Collection<Object> resultsByOnEachSynchronized =
             Collections.synchronizedCollection(new ArrayList<>());
     ProgressBar progressBar;
+    TextView textView;
 
 
     @Override
@@ -56,6 +58,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
         progressBar= findViewById(R.id.progress_bar);
+        textView=findViewById(R.id.percent);
         progressBar.setMax(TASKS_NUMBER);
         handler=new Handler();
 
@@ -108,9 +111,6 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                 tasksOneArgument);
         currentExecutor.awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
 
-
-
-
     }
 
 
@@ -124,37 +124,6 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
             tasksOneArgument[i] = createTaskOneArgument((int)(random()*100));
 
     }
-
-
-      /* Тестировать
-      1. Число фактических вызовов OnEachCompleted на исполнение каждой задачи от числа задач,
-      однократность вызова OnCompleted на каждый набор задач
-      2. Правильность всех возвращаемых результатов OnEachCompleted,
-      то что в нем указан правильный  и восходящий номер задачи по порядку выполнения, что тестовая коллекция
-      содержит исключения и что результаты и аргументы непустые (и правильные)
-      3. Полученная в OnCompleted коллекция тестируется на число записей в ней,
-      правильность результатов, наличие исключений, восходящие номера записей
-      4. Прием как результатов массивов И списков задач
-
-    */
-
-
-    private void assertEquals(long a, long b) {
-        if (a!=b) throw new AssertionError();
-    }
-
-
-
-
-    private void isArgumentSquared(Collection<ResultedRecord> results) {
-        for (ResultedRecord record:results)
-        {
-            if (record.result instanceof Exception) break;
-            int argument = (int)record.arguments[0];
-            assertEquals( argument*argument,(int)record.result);
-        }
-    }
-
 
 
 
@@ -175,6 +144,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                 Integer finalArgument = (Integer) argument[0];
 
                 // в данном случае мы возводим аргумент в квадрат
+
                 // для тестирования  что исключения правильно передаются выше и
                 // попадают в итоговые результаты каждый 10й объект бросит исключение
 
@@ -208,6 +178,8 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                     data=currentTaskNumber+" / "+result.toString()+" /  "+argument [0].toString();
                     resultsByOnEachSynchronized.add(data);
                     progressBar.setProgress(currentTaskByExecutionNumber);
+                    textView.setText(String.format("Процент выполнения равен=%.1f%%", completion));
+
 
                }
 
@@ -240,6 +212,24 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
             {assertEquals(record.taskNumber, lastNumber + 1);
                 lastNumber=record.taskNumber;}
 
+        }
+    }
+
+
+
+    private void assertEquals(long a, long b) {
+        if (a!=b) throw new AssertionError();
+    }
+
+
+
+
+    private void isArgumentSquared(Collection<ResultedRecord> results) {
+        for (ResultedRecord record:results)
+        {
+            if (record.result instanceof Exception) break;
+            int argument = (int)record.arguments[0];
+            assertEquals( argument*argument,(int)record.result);
         }
     }
 

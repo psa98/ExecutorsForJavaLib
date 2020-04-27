@@ -44,9 +44,6 @@ public class TaskSchedulerExample extends AppCompatActivity
                 for (int i = 0; i <TASKS_NUMBER; i++)
                     tasks[i] = createTaskTwoArguments(i,2);
 
-                //for (int i = 0; i <TASKS_NUMBER; i++)
-                //    tasks[i] = createTaskOneArgument(i);
-
 
                 currentExecutor = new TasksScheduler();
                 currentExecutor.submitTasks(10,
@@ -64,6 +61,7 @@ public class TaskSchedulerExample extends AppCompatActivity
 
 
     Task createTaskTwoArguments (final Object...arguments){
+        //noinspection RedundantThrows
         return new Task(arguments){
             @Override
             public Object doTask(final Object...arguments) throws Exception {
@@ -73,11 +71,8 @@ public class TaskSchedulerExample extends AppCompatActivity
                 // - то к массиву соответствующих объектов, иначе к типу
                 // переданного единственного объекта
 
-
-
-
                 /// todo - посмотреть как сюда можно приделать сохранение типов, что бы не
-                //   кастить все каждый раз из объектов, это может вести к ошибкам
+                //   кастить в  doTask все каждый раз из объектов, это может вести к ошибкам
 
 
                 // тестируем что исключения правильно передаются
@@ -94,30 +89,6 @@ public class TaskSchedulerExample extends AppCompatActivity
     }
 
 
-    Task createTaskOneArgument (final Object...arguments){
-        return new Task(arguments){
-            @Override
-            public Object doTask(final Object...argument) throws Exception {
-
-
-                // Полученный аргумент должен быть приведен к необходимому виду,
-                // если мы используем vararg как аргументы при создании задач
-                // - то к массиву соответствующих объектов, иначе к типу
-                // переданного единственного объекта
-
-                Integer finalArgument = (Integer) argument[0];
-                // put your code for doing task here
-                // в данном случае мы умножаем аргумент на 3
-
-
-                if (finalArgument==10) throw new ArithmeticException();
-
-                return finalArgument * 3;
-
-            }
-        };
-
-    }
 
 
 

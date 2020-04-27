@@ -75,7 +75,7 @@ public class SimpleAsyncSchedulerTest_Done {
 
 
 
-            //Thread.sleep(TIMEOUT);
+
 
             callableTasksCounter = 0;
             runnableTasksCounter = 0;
@@ -101,6 +101,8 @@ public class SimpleAsyncSchedulerTest_Done {
             assertEquals(TARGET_TASKS_COUNT * 2, runnableTasksCounter);
             assertEquals(TARGET_TASKS_COUNT*4*2, commonArray.size());
             System.out.println("Batch "+batch);
+            // todo -стоит добавить тестирование правильности итогов callable
+
         }
         System.out.println("Total "+REPETITIONS_COUNTER*TARGET_TASKS_COUNT*2*4);
     }

@@ -1,7 +1,5 @@
 package c.ponom.executorsforjavalib;
 
-import android.app.Activity;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -107,11 +105,8 @@ public  class TasksScheduler {
                                           List<Task> listOfTasks)  {
 
         // Я что то запутался как это проще сделать, преобразовать список задач в
-        // типизированный массив задач, а через цикл как то коряво и неправильно
-        Task[] typedArray = new Task[]{};
-
-        final Task[] arrayOfTasks =  listOfTasks.toArray(typedArray);
-
+        // типизированный массив задач, а через цикл как то коряво было бы и медленнее
+        final Task[] arrayOfTasks =  listOfTasks.toArray(new Task[]{});
         return submitTasks(numberOfThreads,onCompleted,
         onEachCompleted, arrayOfTasks);
 
@@ -169,7 +164,7 @@ public  class TasksScheduler {
                                     currentExecutor,
                                     completionPercent, arguments);
                         }
-                        ;
+
 
 
                         if (tasksCompleted < totalTasks) return null;
@@ -202,8 +197,6 @@ public  class TasksScheduler {
          *
          * @param resultsByTaskOrder - та же коллекция результатов, отсортированная по порядку переданных
          * в метод submitTasks(...) задач
-         *
-         * @param resultsByTaskOrder
          */
 
         void runAfterCompletion(Collection<ResultedRecord> resultsByExecutionOrder,

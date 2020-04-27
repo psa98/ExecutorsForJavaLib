@@ -10,6 +10,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.random;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 public class SingleTaskSchedulerTest_Done {
@@ -29,15 +31,13 @@ public class SingleTaskSchedulerTest_Done {
     private static final Object mutexCallback =new Object();
     private static final Object mutexTask =new Object();
 
-    // todo = посмотреть что можно сделать с передачей мутексов тут и в других классах, как у синх. коллекций
 
     private final Collection<Object> resultedCollection =
             Collections.synchronizedList(new ArrayList<>());
 
 
      /* сравниваем число фактических вызовов коллбэка от запрошенного,
-      а так же проверяем итоговую  коллекцию возвращенных результтатов  */
-            //todo - описать что тестировали
+      а так же проверяем итоговую  коллекцию возвращенных результатов  */
 
 
 
@@ -58,20 +58,22 @@ public class SingleTaskSchedulerTest_Done {
 
                 for (int taskNumber = 0; taskNumber <NUMBER_OF_TASKS; taskNumber++) {
                 SingleTaskScheduler currentExecutor = new SingleTaskScheduler();
-                currentExecutor.submitAsyncTask(testCallableArray[taskNumber],asyncCallBack,null)
+                currentExecutor.submitAsyncTask(testCallableArray[taskNumber],asyncCallBack)
                         .awaitTermination(TIMEOUT,TimeUnit.MILLISECONDS);
                 }
 
                 System.out.println("TasksCompleted " + completionTestCounter);
                 System.out.println("Size " + resultedCollection.size());
                 System.out.println("batch " + (testBatch + 1));
-
+                assertEquals(NUMBER_OF_TASKS,resultedCollection.size());
+                assertTrue(containsExceptions(resultedCollection));
 
 
             }
 
         }
         private final Callable unitTestCallable = new Callable() {
+            @SuppressWarnings("RedundantThrows")
             @Override
             public Object call() throws Exception {
 
@@ -104,6 +106,17 @@ public class SingleTaskSchedulerTest_Done {
         };
 
 
+    private boolean containsExceptions(Collection collection) {
+
+        for (Object record : collection) {
+            if (record instanceof Exception) {
+                return  true;
+
+            }
+        }
+        return false; //если все просмотрели, а исключений нет
+
+    }
 
 
 
