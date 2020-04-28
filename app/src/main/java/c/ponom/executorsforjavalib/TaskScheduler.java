@@ -12,9 +12,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 @SuppressWarnings("WeakerAccess")
 public  class TaskScheduler {
 
-
-
-
     final Collection<ResultedRecord> resultsByExecutionOrder =
             Collections.synchronizedList(new ArrayList<ResultedRecord>());
 
@@ -32,6 +29,21 @@ public  class TaskScheduler {
 
 
     };
+
+
+    /* TODO - пожелания на будущее:
+    1. Возможный переход на Java 1.8 - позволит использвать лямбды и более гибкий newWorkStealingPool
+    2. Тестировние с реальными задачачами на обмен с сетью, в т.ч. с имитацией таймаутов, сетевых ошибок
+    и с файловой системой.
+    3. Нагрузочное тестрование на реальном аппарате, управление приоритетами потоков
+    (поднять приоритет исполнения потока реально, я это делал)
+    4. Тестирование на утечки, на создание
+
+
+     */
+
+
+
 
     /**
      *

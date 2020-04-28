@@ -14,6 +14,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -31,7 +32,9 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
     private static final int TASKS_NUMBER = 500;
     private static final long TIMEOUT =2000 ;
-    private static final int THREAD_NUMBER = 2;
+    private static final int THREAD_NUMBER = 20;
+    //Выделение излишнего числа потоков скорее замедлит работу - из-за переключений контекста,
+    // перегрузки I|O каналов, работы сборщика после завершения заданий
     private Task[] tasksOneArgument= new Task[TASKS_NUMBER];
     boolean isDoing = false;
 
@@ -49,7 +52,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
     ProgressBar progressBar;
     TextView textView;
     TextView textViewTasks;
-
+    //Integer[] array;
     ThreadPoolExecutor currentExecutor;
 
 
@@ -180,6 +183,11 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                                          final int currentTaskByExecutionNumber,
                                          ThreadPoolExecutor currentExecutor,
                                          double completion, Object... argument) {
+
+                    // нагрузочное тестирование на выделение памяти  - gc хорошо справляется,
+                    // хотя вызывается слишком часто и тормозит на 100-200 мс
+                    //array = new Integer[500000];
+                    //Arrays.fill(array,42);
                     try {
                         sleep((long) (100+ random()));
                     } catch (InterruptedException e) {
