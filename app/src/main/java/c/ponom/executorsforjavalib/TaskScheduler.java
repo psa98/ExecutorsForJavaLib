@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 
 @SuppressWarnings("WeakerAccess")
-public  class TasksScheduler {
+public  class TaskScheduler {
 
 
 
@@ -82,7 +82,8 @@ public  class TasksScheduler {
         if (currentExecutor!=null)
             throw new IllegalStateException("This scheduler has tasks or is in shutdown  mode," +
                 " make a new instance");
-        currentExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numberOfThreads);
+        currentExecutor = (ThreadPoolExecutor) Executors.
+                newFixedThreadPool(numberOfThreads);
         tasksCompleted= 0;
         totalTasks=tasks.length;
         for (int taskNumber=0;taskNumber<totalTasks; taskNumber++) {

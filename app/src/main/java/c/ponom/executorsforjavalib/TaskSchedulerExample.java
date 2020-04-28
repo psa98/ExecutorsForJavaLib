@@ -12,7 +12,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.Collection;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import c.ponom.executorsforjavalib.TasksScheduler.ResultedRecord;
+import c.ponom.executorsforjavalib.TaskScheduler.ResultedRecord;
 
 import static java.lang.Math.floor;
 
@@ -20,7 +20,7 @@ import static java.lang.Math.floor;
 public class TaskSchedulerExample extends AppCompatActivity
 {
 
-    TasksScheduler currentExecutor;
+    TaskScheduler currentExecutor;
     int TASKS_NUMBER= 20;
 
     @Override
@@ -45,7 +45,7 @@ public class TaskSchedulerExample extends AppCompatActivity
                     tasks[i] = createTaskTwoArguments(i,2);
 
 
-                currentExecutor = new TasksScheduler();
+                currentExecutor = new TaskScheduler();
                 currentExecutor.submitTasks(10,
                         onCompleted,
                         onEachCompleted,
@@ -94,8 +94,8 @@ public class TaskSchedulerExample extends AppCompatActivity
 
 
 
-    TasksScheduler.OnEachCompleted onEachCompleted =
-            new TasksScheduler.OnEachCompleted(){
+    TaskScheduler.OnEachCompleted onEachCompleted =
+            new TaskScheduler.OnEachCompleted(){
 
         @Override
         public void runAfterEach(int currentTaskNumber,
@@ -123,7 +123,7 @@ public class TaskSchedulerExample extends AppCompatActivity
 
 
 
-    TasksScheduler.OnCompleted onCompleted = new TasksScheduler.OnCompleted(){
+    TaskScheduler.OnCompleted onCompleted = new TaskScheduler.OnCompleted(){
 
 
         @Override

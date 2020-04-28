@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import c.ponom.executorsforjavalib.TasksScheduler.ResultedRecord;
+import c.ponom.executorsforjavalib.TaskScheduler.ResultedRecord;
 
 import static java.lang.Math.random;
 import static java.lang.Thread.sleep;
@@ -31,8 +31,9 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
     private static final int TASKS_NUMBER = 500;
     private static final long TIMEOUT =2000 ;
-    private static final int THREAD_NUMBER = 10;
+    private static final int THREAD_NUMBER = 2;
     private Task[] tasksOneArgument= new Task[TASKS_NUMBER];
+    boolean isDoing = false;
 
 
     private Collection<ResultedRecord> resultedRecordsByExecution =
@@ -47,6 +48,9 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
             Collections.synchronizedCollection(new ArrayList<>());
     ProgressBar progressBar;
     TextView textView;
+    TextView textViewTasks;
+
+    ThreadPoolExecutor currentExecutor;
 
 
     @Override
@@ -59,6 +63,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
         FloatingActionButton fab = findViewById(R.id.fab);
         progressBar= findViewById(R.id.progress_bar);
         textView=findViewById(R.id.percent);
+        textViewTasks=findViewById(R.id.tasks);
         progressBar.setMax(TASKS_NUMBER);
         handler=new Handler();
 
@@ -103,13 +108,19 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
         prepareTasks();
 
 
+        // если текущий экзекьютор еще не выполнил всю работу, новый не создается
+        // Если необходимо что бы поставленные задачи переживали поворот экрана
+        // шедулер и экзекьютор следует перенести во ViewModel или иной подобный класс
+        //
 
-        TasksScheduler tasksScheduler = new TasksScheduler();
-        ThreadPoolExecutor currentExecutor = tasksScheduler.submitTasks(THREAD_NUMBER,
+        if (currentExecutor!=null&&currentExecutor.getCompletedTaskCount()<TASKS_NUMBER) return;
+        TaskScheduler taskScheduler = new TaskScheduler();
+        currentExecutor = taskScheduler.submitTasks(THREAD_NUMBER,
                 onCompleted,
                 onEachCompleted,
                 tasksOneArgument);
         currentExecutor.awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
+        isDoing = false;
 
     }
 
@@ -159,8 +170,8 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
 
 
-    private  TasksScheduler.OnEachCompleted onEachCompleted =
-            new TasksScheduler.OnEachCompleted(){
+    private  TaskScheduler.OnEachCompleted onEachCompleted =
+            new TaskScheduler.OnEachCompleted(){
 
                 @Override
                 public synchronized void runAfterEach(int currentTaskNumber,
@@ -177,8 +188,31 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                     String data;
                     data=currentTaskNumber+" / "+result.toString()+" /  "+argument [0].toString();
                     resultsByOnEachSynchronized.add(data);
-                    progressBar.setProgress(currentTaskByExecutionNumber);
-                    textView.setText(String.format("Процент выполнения равен=%.1f%%", completion));
+
+
+                    /*код ниже использует данные о порядке исполнения из аргумента completion
+                    if (progressBar!=null&&textView!=null) {
+                        // проверяем существует ли еще активность
+                        progressBar.setProgress(currentTaskByExecutionNumber);
+                        textView.setText(String.format("Процент выполнения равен=%.1f%%", completion));
+                    }
+                    */
+
+
+                    //альтернативный код иcпользует данные непосредственно из экзекьютора:
+
+                    if (progressBar!=null&&textView!=null) {
+                        // проверяем существует ли еще активность
+                        int count= (int) currentExecutor.getCompletedTaskCount();
+
+                        progressBar.setProgress(currentTaskByExecutionNumber);
+                        textView.setText(String.format("Процент выполнения равен=%.1f%%", completion));
+
+                        progressBar.setProgress(count);
+                        textViewTasks.setText("Выполнено задач ="+count);
+
+                    }
+
 
 
                }
@@ -188,7 +222,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
 
 
-    private TasksScheduler.OnCompleted onCompleted = new TasksScheduler.OnCompleted(){
+    private TaskScheduler.OnCompleted onCompleted = new TaskScheduler.OnCompleted(){
 
 
         @Override
@@ -198,6 +232,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
             resultedRecordsByTaskOrder.addAll(resultsByTaskOrder);
             isInAscendingOrder(resultedRecordsByTaskOrder);
             isArgumentSquared(resultsByExecutionOrder);
+
 
 
         }

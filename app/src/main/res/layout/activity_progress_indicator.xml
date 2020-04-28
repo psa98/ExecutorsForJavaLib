@@ -50,9 +50,19 @@
             android:id="@+id/percent"
             android:layout_width="match_parent"
             android:layout_height="40sp"
-            android:text="0%"
+
              app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/progress_bar" />
+
+        <TextView
+            android:id="@+id/tasks"
+            android:layout_width="match_parent"
+            android:layout_height="40sp"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/percent" />
+
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

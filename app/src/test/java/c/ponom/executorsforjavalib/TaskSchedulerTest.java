@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import c.ponom.executorsforjavalib.TasksScheduler.ResultedRecord;
+import c.ponom.executorsforjavalib.TaskScheduler.ResultedRecord;
 
 import static org.junit.Assert.*;
 
-public class TasksSchedulerTest {
+public class TaskSchedulerTest {
 
     private static final int TASKS_NUMBER = 5000;
     private static final long TIMEOUT =2000 ;
@@ -42,9 +42,9 @@ public class TasksSchedulerTest {
 
         // проверяем собранные после вызовов слушателей коллекции (для одного аргумента):
 
-        TasksScheduler tasksScheduler = new TasksScheduler();
+        TaskScheduler taskScheduler = new TaskScheduler();
         currentExecutor
-                = tasksScheduler.submitTasks(THREAD_NUMBER,
+                = taskScheduler.submitTasks(THREAD_NUMBER,
                 onCompleted,
                 onEachCompleted,
                 tasksOneArgument);
@@ -64,9 +64,9 @@ public class TasksSchedulerTest {
 
 
 
-        tasksScheduler = new TasksScheduler();
+        taskScheduler = new TaskScheduler();
         currentExecutor
-                = tasksScheduler.submitTasks(THREAD_NUMBER,
+                = taskScheduler.submitTasks(THREAD_NUMBER,
                 onCompleted,
                 onEachCompleted,
                 tasksTwoArguments);
@@ -88,9 +88,9 @@ public class TasksSchedulerTest {
 
 
         //метод проверяет что submit работает и со списками
-        TasksScheduler tasksScheduler = new TasksScheduler();
+        TaskScheduler taskScheduler = new TaskScheduler();
         currentExecutor
-                = tasksScheduler.submitTasks(THREAD_NUMBER,
+                = taskScheduler.submitTasks(THREAD_NUMBER,
                 onCompleted,
                 onEachCompleted,
                 tasksOneArgumentList);
@@ -112,9 +112,9 @@ public class TasksSchedulerTest {
 
 
 
-        tasksScheduler = new TasksScheduler();
+        taskScheduler = new TaskScheduler();
         currentExecutor
-                = tasksScheduler.submitTasks(THREAD_NUMBER,
+                = taskScheduler.submitTasks(THREAD_NUMBER,
                 onCompleted,
                 onEachCompleted,
                 tasksTwoArgumentsList);
@@ -274,8 +274,8 @@ public class TasksSchedulerTest {
 
 
 
-    private TasksScheduler.OnEachCompleted onEachCompleted =
-            new TasksScheduler.OnEachCompleted(){
+    private TaskScheduler.OnEachCompleted onEachCompleted =
+            new TaskScheduler.OnEachCompleted(){
 
                 @Override
                 public void runAfterEach(int currentTaskNumber,
@@ -294,7 +294,7 @@ public class TasksSchedulerTest {
 
 
 
-    private TasksScheduler.OnCompleted onCompleted = new TasksScheduler.OnCompleted(){
+    private TaskScheduler.OnCompleted onCompleted = new TaskScheduler.OnCompleted(){
 
 
         @Override
