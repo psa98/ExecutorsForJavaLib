@@ -14,7 +14,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -32,7 +31,10 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
     private static final int TASKS_NUMBER = 500;
     private static final long TIMEOUT =2000 ;
-    private static final int THREAD_NUMBER = 20;
+    ///  этот таймаут в примере работает на время _постановки всего пакета задач_не их завершения
+
+
+    private static final int THREAD_NUMBER = 5;
     //Выделение излишнего числа потоков скорее замедлит работу - из-за переключений контекста,
     // перегрузки I|O каналов, работы сборщика после завершения заданий
     private Task[] tasksOneArgument= new Task[TASKS_NUMBER];
@@ -148,11 +150,14 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
             public Object doTask(final Object...argument) throws Exception {
 
 
+
                 // Полученный аргумент должен быть приведен к необходимому виду,
                 // если мы используем vararg как аргументы при создании задач
                 // - то к массиву соответствующих объектов, иначе к типу
                 // переданного единственного объекта
 
+
+                sleep((long) (1000* random()));
 
 
                 Integer finalArgument = (Integer) argument[0];
@@ -188,11 +193,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                     // хотя вызывается слишком часто и тормозит на 100-200 мс
                     //array = new Integer[500000];
                     //Arrays.fill(array,42);
-                    try {
-                        sleep((long) (100+ random()));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+
                     String data;
                     data=currentTaskNumber+" / "+result.toString()+" /  "+argument [0].toString();
                     resultsByOnEachSynchronized.add(data);
@@ -213,10 +214,10 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                         // проверяем существует ли еще активность
                         int count= (int) currentExecutor.getCompletedTaskCount();
 
-                        progressBar.setProgress(currentTaskByExecutionNumber);
+                        progressBar.setProgress((int) (count));
                         textView.setText(String.format("Процент выполнения равен=%.1f%%", completion));
 
-                        progressBar.setProgress(count);
+
                         textViewTasks.setText("Выполнено задач ="+count);
 
                     }
