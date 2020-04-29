@@ -71,6 +71,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
         textView=findViewById(R.id.percent);
         textViewTasks=findViewById(R.id.tasks);
         progressBar.setMax(TASKS_NUMBER);
+        // todo - добавить в список  задачи (и откопиировать в юнит тест) задачу на два параметра
 
 
 
@@ -158,15 +159,12 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
 
                 sleep((long) (1000* random()));
-
-
                 Integer finalArgument = (Integer) argument[0];
 
                 // в данном случае мы возводим аргумент в квадрат
 
                 // для тестирования  что исключения правильно передаются выше и
                 // попадают в итоговые результаты каждый 10й объект бросит исключение
-
                 if ((int)arguments[0] %10 ==9 ) throw new ArithmeticException();
               return finalArgument *  finalArgument;
 
