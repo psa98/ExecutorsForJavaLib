@@ -61,7 +61,10 @@ public class SingleTaskSchedulerTest_Done {
                 currentExecutor.submitAsyncTask(testCallableArray[taskNumber],asyncCallBack)
                         .awaitTermination(TIMEOUT,TimeUnit.MILLISECONDS);
                 }
-
+                // если поставить медленную задачу, то до завершения таймаута
+                // она может  не быть исполненной. В таком случае тестировать
+                // выполнение всего тестового пакета задач надо по завершению
+                // последнего коллбэка
                 System.out.println("TasksCompleted " + completionTestCounter);
                 System.out.println("Size " + resultedCollection.size());
                 System.out.println("batch " + (testBatch + 1));

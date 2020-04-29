@@ -1,8 +1,7 @@
 package c.ponom.executorsforjavalib;
 
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -21,13 +20,15 @@ import java.util.concurrent.TimeUnit;
 
 import c.ponom.executorsforjavalib.TaskScheduler.ResultedRecord;
 
+import static c.ponom.executorsforjavalib.R.string.*;
+import static c.ponom.executorsforjavalib.R.string.task_count;
 import static java.lang.Math.random;
 import static java.lang.Thread.sleep;
 
 public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 {
-    Activity activity;
-    Handler handler;
+
+
 
     private static final int TASKS_NUMBER = 500;
     private static final long TIMEOUT =2000 ;
@@ -62,7 +63,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_progress_indicator);
-        activity= this;
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -70,7 +71,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
         textView=findViewById(R.id.percent);
         textViewTasks=findViewById(R.id.tasks);
         progressBar.setMax(TASKS_NUMBER);
-        handler=new Handler();
+
 
 
 
@@ -145,7 +146,6 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
     private Task createTaskOneArgument(final Object... arguments){
         return new Task(arguments){
-            @SuppressWarnings("RedundantThrows")
             @Override
             public Object doTask(final Object...argument) throws Exception {
 
@@ -181,6 +181,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
     private  TaskScheduler.OnEachCompleted onEachCompleted =
             new TaskScheduler.OnEachCompleted(){
 
+                @SuppressLint("DefaultLocale")
                 @Override
                 public synchronized void runAfterEach(int currentTaskNumber,
                                          Object result,
@@ -189,7 +190,8 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                                          ThreadPoolExecutor currentExecutor,
                                          double completion, Object... argument) {
 
-                    // нагрузочное тестирование на выделение памяти  - gc хорошо справляется,
+                    // тут было нагрузочное тестирование на выделение памяти
+                    // в тредах - gc хорошо справляется,
                     // хотя вызывается слишком часто и тормозит на 100-200 мс
                     //array = new Integer[500000];
                     //Arrays.fill(array,42);
@@ -215,10 +217,10 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                         int count= (int) currentExecutor.getCompletedTaskCount();
 
                         progressBar.setProgress((int) (count));
-                        textView.setText(String.format("Процент выполнения равен=%.1f%%", completion));
+                        textView.setText(String.format(getString(completion_percent), completion));
 
 
-                        textViewTasks.setText("Выполнено задач ="+count);
+                        textViewTasks.setText(String.format("%s%d", getString(task_count), count));
 
                     }
 
@@ -250,7 +252,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
     private void isInAscendingOrder(Collection<ResultedRecord> collection){
         // номера записей в итоговой коллекции должны идти последовательно через единицу
-        long lastNumber=-1; // номера коллекций начинаются с 0,
+        int lastNumber=-1; // номера коллекций начинаются с 0,
         // это решит проблему с чем  сравнивать запись [0]
         for (ResultedRecord record:collection){
             {assertEquals(record.taskNumber, lastNumber + 1);
@@ -261,7 +263,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
 
 
-    private void assertEquals(long a, long b) {
+    private void assertEquals(int a, int b) {
         if (a!=b) throw new AssertionError();
     }
 

@@ -22,7 +22,8 @@ public class TaskSchedulerExample extends AppCompatActivity
 
     TaskScheduler currentExecutor;
     int TASKS_NUMBER= 20;
-
+    // TODO убрать эту активность, а соотв. проверки оставшихся методов
+    // перенести на отдельные кнопки в основном примере
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

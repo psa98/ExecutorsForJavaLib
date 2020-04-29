@@ -1,5 +1,7 @@
 package c.ponom.executorsforjavalib;
 
+import androidx.annotation.NonNull;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -7,17 +9,22 @@ import java.util.concurrent.ThreadPoolExecutor;
 @SuppressWarnings("WeakerAccess")
 public class SimpleAsyncScheduler {
 
+    /* todo 1. добавить аргументы-списки вместо массивов с тестированием
+            2. протестить на реальном примере (читалка) - заменив асинктаски
+     */
+
     /**
      * <p> Метод  создает экзекьютор с указанным числом потоков, которому
      * можно передать задачу или массив задач. Пример использования:
      * launchTasks(10,myRunnable);
+     *
      *
      * @param
      * threads - запрашиваемое количество потоков
      *
      * @param
      * tasks - Runnable/Callable к исполнению или их массив (список)
-     * метод launchTask выполняет переданный ему массив Runnable,
+     * метод launchTask выполняет переданный ему массив Runnable/Callable,
      * в указанном числе потоков, без вызова коллбэков и возвращения результатов
      * При необходимости получения результатов каждой задачи их можно, к примеру,
      * получать путем изменения внешнего к задаче объекта, к примеру, внешней
@@ -33,15 +40,14 @@ public class SimpleAsyncScheduler {
      * использования конкурентных коллекций и атомарных переменных, волатильных переменных и
      * синхронизированных методов
      *
-     * Дождаться завершения всех задач можно:
-     * 1. Реализовав внутри переданных Runnable/Callable счетчик и считать  когда количество
-     *  полученных коллбэков сравняется числу переданных
-     * 2. Выполнив блокирующий awaitingTermination (timeout) к полученному экзекьютору
+     * Дождаться завершения всех задач можно реализовав внутри переданных Runnable/Callable
+     * счетчик
+     *
      *
      */
 
 
-    public static ThreadPoolExecutor launchTasks(int threads,Runnable...tasks){
+    public static ThreadPoolExecutor launchTasks(int threads,@NonNull Runnable...tasks){
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
         for (Runnable task:tasks){
             executor.submit(task);
@@ -50,7 +56,7 @@ public class SimpleAsyncScheduler {
         return executor;
     }
 
-    public static ThreadPoolExecutor launchTasks(int threads,Callable...tasks){
+    public static ThreadPoolExecutor launchTasks(int threads,@NonNull Callable...tasks){
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
         for (Callable task:tasks){
             executor.submit(task);
@@ -58,4 +64,10 @@ public class SimpleAsyncScheduler {
         executor.shutdown();
         return executor;
     }
+
+
+
+
+
+
 }
