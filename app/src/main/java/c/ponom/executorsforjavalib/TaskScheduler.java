@@ -9,7 +9,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 
-@SuppressWarnings("WeakerAccess")
+
+@SuppressWarnings({"UnusedReturnValue", "unused","WeakerAccess"})
 public  class TaskScheduler {
 
     final Collection<ResultedRecord> resultsByExecutionOrder =
@@ -20,14 +21,13 @@ public  class TaskScheduler {
     final Object innerLock = new Object();
     ThreadPoolExecutor currentExecutor=null;
     int  tasksCompleted= 0;
+
+
     Comparator<ResultedRecord> comparator = new Comparator<ResultedRecord>() {
         @Override
         public int compare(ResultedRecord resultedRecord1, ResultedRecord resultedRecord2) {
             return Integer.compare(resultedRecord1.taskNumber, resultedRecord2.taskNumber);
-        }
-
-
-
+        } //сортировка по номеру задачи (по порядку постановки, а не исполнения)
     };
 
 
@@ -111,7 +111,7 @@ public  class TaskScheduler {
     }
 
 
-    @SuppressWarnings({"UnusedReturnValue", "unused"})
+
     public ThreadPoolExecutor submitTasks(int numberOfThreads,
                                           OnCompleted onCompleted,
                                           OnEachCompleted onEachCompleted,
@@ -164,9 +164,10 @@ public  class TaskScheduler {
 
                     synchronized (innerLock) {
 
-                        final ResultedRecord resultedRecord = new ResultedRecord(currentTaskNumber, arguments, result);
+                        final ResultedRecord resultedRecord =
+                                new ResultedRecord(currentTaskNumber, arguments, result);
                         resultsByExecutionOrder.add(resultedRecord);
-                        // число выполненных задач считается с единицы, не с 0
+                        // число выполненных задач для передачи в onEach считается с единицы, не с 0
                         tasksCompleted++;
                         final double completionPercent = (((float) tasksCompleted) / ((float) totalTasks)) * 100f;
                         final int currentTaskByExecutionOrder = tasksCompleted;
@@ -179,21 +180,18 @@ public  class TaskScheduler {
                         }
 
 
-
                         if (tasksCompleted < totalTasks) return null;
-                    } // конец блока синхронизации
+                    }   // конец блока синхронизации. Синхронизируем инкремент счетчика и проверку его
+                        // значения, иначе будут твориться чудеса
 
                     // обеспечение вызова завершающего кода
                     if (onCompleted == null) return null;
                     final ArrayList<ResultedRecord> resultsByTaskOrder =
                             new ArrayList<>(resultsByExecutionOrder);
                     Collections.sort(resultsByTaskOrder, comparator);
-
                     onCompleted.runAfterCompletion(resultsByExecutionOrder, resultsByTaskOrder);
                     return null;
                 }};
-
-
 
         return boxedTask;
     }

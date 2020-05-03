@@ -71,7 +71,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
         textView=findViewById(R.id.percent);
         textViewTasks=findViewById(R.id.tasks);
         progressBar.setMax(TASKS_NUMBER);
-        // todo - добавить в список  задачи (и откопиировать в юнит тест) задачу на два параметра
+        // todo - добавить в список  задачи (и откопировать в юнит тест) задачу на два параметра
 
 
 
@@ -221,10 +221,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                         textViewTasks.setText(String.format("%s%d", getString(task_count), count));
 
                     }
-
-
-
-               }
+              }
 
             };
 

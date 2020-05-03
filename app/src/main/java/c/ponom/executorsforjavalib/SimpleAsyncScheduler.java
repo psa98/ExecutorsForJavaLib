@@ -2,6 +2,10 @@ package c.ponom.executorsforjavalib;
 
 import androidx.annotation.NonNull;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -9,9 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @SuppressWarnings("WeakerAccess")
 public class SimpleAsyncScheduler {
 
-    /* todo 1. добавить аргументы-списки вместо массивов с тестированием
-            2. протестить на реальном примере (читалка) - заменив асинктаски
-     */
+
 
     /**
      * <p> Метод  создает экзекьютор с указанным числом потоков, которому
@@ -42,12 +44,11 @@ public class SimpleAsyncScheduler {
      *
      * Дождаться завершения всех задач можно реализовав внутри переданных Runnable/Callable
      * счетчик
-     *
-     *
      */
 
 
     public static ThreadPoolExecutor launchTasks(int threads,@NonNull Runnable...tasks){
+        if (tasks.length==0) throw new IllegalArgumentException("List of tasks is empty");
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
         for (Runnable task:tasks){
             executor.submit(task);
@@ -57,6 +58,7 @@ public class SimpleAsyncScheduler {
     }
 
     public static ThreadPoolExecutor launchTasks(int threads,@NonNull Callable...tasks){
+        if (tasks.length==0) throw new IllegalArgumentException("List of tasks is empty");
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
         for (Callable task:tasks){
             executor.submit(task);
@@ -66,8 +68,24 @@ public class SimpleAsyncScheduler {
     }
 
 
+    public static ThreadPoolExecutor launchTasks(int threads,@NonNull List tasks){
+        if (tasks.isEmpty()) throw new IllegalArgumentException("List of tasks is empty");
+        Callable[] callableList=new Callable[tasks.size()];
+        Runnable[] runnableList=new Runnable[tasks.size()];;
+        if (tasks.get(0) instanceof Callable) {
+            callableList = (Callable[]) tasks.toArray(callableList);
+            // вообще Null  тут не может быть но IDE настаивает
+            if (callableList != null) return launchTasks(threads, callableList);
+        }
+        if (tasks.get(0) instanceof Runnable) {
+            runnableList = (Runnable[]) tasks.toArray(runnableList);
+            // вообще Null  тут не может быть но IDE настаивает
+            if (runnableList != null) return launchTasks(threads, runnableList);
+        }
+        throw new IllegalArgumentException("List of tasks can contain only Runnable/Callable");
 
-
-
+        // перегнать на котлин заново
+        }
 
 }
+

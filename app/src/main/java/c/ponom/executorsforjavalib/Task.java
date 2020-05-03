@@ -5,26 +5,24 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public  abstract class Task {
+public  abstract class Task <T,R> {
+    // типизация - тип аргумента, тип (R) результата
+
+    private T argument = null;
 
 
-    private Object[] argument = null;
-
-
-     final public   Callable getCallableForExecutor() {
+    final public   Callable getCallableForExecutor() {
         return callableForExecutor;
     }
 
     final private Callable callableForExecutor = new Callable() {
         @Override
-        final public Object call() throws Exception {
-
+        final public R call() throws Exception {
             return  doTask(argument);
         }
     };
 
     private Task() {
-
     }
 
 
@@ -38,24 +36,24 @@ public  abstract class Task {
      *                      результата, включив в ветку catch  ...return exception;}
      *
      * @throws Exception    В случае если исключения не обрабатываются, они будут проброшены выше и
-     *                      включены в соответвующий результат в качестве объекта Exception
+     *                      включены в соответствующий результат в качестве объекта Exception
      */
-    abstract public Object doTask(Object... argument)  throws Exception;
+    abstract public R doTask(T argument)  throws Exception;
 
 
-     public Task(@NonNull Object...argument) {
 
+
+    public Task(@NonNull T argument) {
         this.argument = argument;
-
     }
 
 
 
-    final public Object[] getArguments() {
+    final public T getArguments() {
         return argument;
     }
 
-    final public void setArguments(Object...arguments) {
+    final public void setArguments(T arguments) {
         this.argument = arguments;
     }
 }
