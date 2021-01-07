@@ -70,8 +70,12 @@ public class SimpleAsyncScheduler {
 
     public static ThreadPoolExecutor launchTasks(int threads,@NonNull List tasks){
         if (tasks.isEmpty()) throw new IllegalArgumentException("List of tasks is empty");
+
+        //todo - ниже определение того имеем ли мы дело со списком Runnable/Callable определяется п
+        // по первому элементу. надо дополнить проверкой того что в списке все одного типа и постороннего
+        // ничего нет
         Callable[] callableList=new Callable[tasks.size()];
-        Runnable[] runnableList=new Runnable[tasks.size()];;
+        Runnable[] runnableList=new Runnable[tasks.size()];
         if (tasks.get(0) instanceof Callable) {
             callableList = (Callable[]) tasks.toArray(callableList);
             // вообще Null  тут не может быть но IDE настаивает
