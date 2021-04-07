@@ -39,7 +39,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
     //Выделение излишнего числа потоков скорее замедлит работу - из-за переключений контекста,
     // перегрузки I|O каналов, работы сборщика после завершения заданий
     private Task[] tasksOneArgument= new Task[TASKS_NUMBER];
-    boolean isDoing = false;
+
 
 
     private Collection<ResultedRecord> resultedRecordsByExecution =
@@ -71,9 +71,6 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
         textView=findViewById(R.id.percent);
         textViewTasks=findViewById(R.id.tasks);
         progressBar.setMax(TASKS_NUMBER);
-        // todo - добавить в список  задачи (и откопировать в юнит тест) задачу на два параметра
-
-
 
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -127,16 +124,13 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                 onEachCompleted,
                 tasksOneArgument);
         currentExecutor.awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS);
-        isDoing = false;
+
 
     }
 
 
 
-
-
     private void prepareTasks(){
-
 
         for (int i = 0; i <TASKS_NUMBER; i++)
             tasksOneArgument[i] = createTaskOneArgument((int)(random()*100));
@@ -149,18 +143,13 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
         return new Task(arguments){
             @Override
             public Object doTask(final Object...argument) throws Exception {
-
-
-
-                // Полученный аргумент должен быть приведен к необходимому виду,
+            // Полученный аргумент должен быть приведен к необходимому виду,
                 // если мы используем vararg как аргументы при создании задач
                 // - то к массиву соответствующих объектов, иначе к типу
                 // переданного единственного объекта
 
-
-                sleep((long) (1000* random()));
+                sleep((long) (1000 * random()));
                 Integer finalArgument = (Integer) argument[0];
-
                 // в данном случае мы возводим аргумент в квадрат
 
                 // для тестирования  что исключения правильно передаются выше и
@@ -197,18 +186,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                     String data;
                     data=currentTaskNumber+" / "+result.toString()+" /  "+argument [0].toString();
                     resultsByOnEachSynchronized.add(data);
-
-
-                    /*код ниже использует данные о порядке исполнения из аргумента completion
-                    if (progressBar!=null&&textView!=null) {
-                        // проверяем существует ли еще активность
-                        progressBar.setProgress(currentTaskByExecutionNumber);
-                        textView.setText(String.format("Процент выполнения равен=%.1f%%", completion));
-                    }
-                    */
-
-
-                    //альтернативный код иcпользует данные непосредственно из экзекьютора:
+                  //альтернативный код иcпользует данные непосредственно из экзекьютора:
 
                     if (progressBar!=null&&textView!=null) {
                         // проверяем существует ли еще активность
@@ -216,8 +194,6 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
                         progressBar.setProgress((int) (count));
                         textView.setText(String.format(getString(completion_percent), completion));
-
-
                         textViewTasks.setText(String.format("%s%d", getString(task_count), count));
 
                     }
@@ -238,8 +214,6 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
             resultedRecordsByTaskOrder.addAll(resultsByTaskOrder);
             isInAscendingOrder(resultedRecordsByTaskOrder);
             isArgumentSquared(resultsByExecutionOrder);
-
-
 
         }
     };
@@ -263,8 +237,6 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
     }
 
 
-
-
     private void isArgumentSquared(Collection<ResultedRecord> results) {
         for (ResultedRecord record:results)
         {
@@ -273,6 +245,5 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
             assertEquals( argument*argument,(int)record.result);
         }
     }
-
 
 }

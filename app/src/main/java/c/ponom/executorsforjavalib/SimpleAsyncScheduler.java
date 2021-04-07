@@ -2,9 +2,6 @@ package c.ponom.executorsforjavalib;
 
 import androidx.annotation.NonNull;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -57,7 +54,7 @@ public class SimpleAsyncScheduler {
         return executor;
     }
 
-    public static ThreadPoolExecutor launchTasks(int threads,@NonNull Callable...tasks){
+    public static ThreadPoolExecutor launchTasks(int threads,@NonNull Callable... tasks){
         if (tasks.length==0) throw new IllegalArgumentException("List of tasks is empty");
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
         for (Callable task:tasks){
@@ -70,22 +67,23 @@ public class SimpleAsyncScheduler {
 
     public static ThreadPoolExecutor launchTasks(int threads,@NonNull List tasks){
         if (tasks.isEmpty()) throw new IllegalArgumentException("List of tasks is empty");
-        Callable[] callableList=new Callable[tasks.size()];
-        Runnable[] runnableList=new Runnable[tasks.size()];;
+        // TODO - если делать красиво - надо typedArray использовать,
+        //  переделать и протестировать
+        Callable<Task>[] callableArray=new Callable[tasks.size()];
+        Runnable[] runnableArray =new Runnable[tasks.size()];;
         if (tasks.get(0) instanceof Callable) {
-            callableList = (Callable[]) tasks.toArray(callableList);
+            callableArray = (Callable[]) tasks.toArray(callableArray);
             // вообще Null  тут не может быть но IDE настаивает
-            if (callableList != null) return launchTasks(threads, callableList);
+            return launchTasks(threads, callableArray);
         }
         if (tasks.get(0) instanceof Runnable) {
-            runnableList = (Runnable[]) tasks.toArray(runnableList);
-            // вообще Null  тут не может быть но IDE настаивает
-            if (runnableList != null) return launchTasks(threads, runnableList);
+            runnableArray = (Runnable[]) tasks.toArray(runnableArray);
+          return launchTasks(threads, runnableArray);
         }
         throw new IllegalArgumentException("List of tasks can contain only Runnable/Callable");
 
-        // перегнать на котлин заново
-        }
+
+    }
 
 }
 

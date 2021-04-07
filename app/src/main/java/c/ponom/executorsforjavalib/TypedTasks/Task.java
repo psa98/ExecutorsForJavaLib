@@ -1,14 +1,14 @@
-package c.ponom.executorsforjavalib;
+package c.ponom.executorsforjavalib.TypedTasks;
 
 import androidx.annotation.NonNull;
 
 import java.util.concurrent.Callable;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public  abstract class Task  {
+public  abstract class Task<T,R> {
+    // типизация - тип аргумента, тип (R) результата задач
 
-
-    private Object[] argument = null;
+    private T argument = null;
 
 
     final public   Callable getCallableForExecutor() {
@@ -17,7 +17,7 @@ public  abstract class Task  {
 
     final private Callable callableForExecutor = new Callable() {
         @Override
-        final public Object call() throws Exception {
+        final public R call() throws Exception {
             return  doTask(argument);
         }
     };
@@ -36,25 +36,24 @@ public  abstract class Task  {
      *                      результата, включив в ветку catch  ...return exception;}
      *
      * @throws Exception    В случае если исключения не обрабатываются, они будут проброшены выше и
-     *                      включены в соответвующий результат в качестве объекта Exception
+     *                      включены в соответствующий результат в качестве объекта Exception
      */
-    abstract public Object doTask(Object... argument)  throws Exception;
+    abstract public R doTask(T argument)  throws Exception;
 
 
 
 
-    public Task(@NonNull Object...argument) {
+    public Task(@NonNull T argument) {
         this.argument = argument;
     }
 
 
 
-    final public Object[] getArguments() {
+    final public T getArguments() {
         return argument;
     }
 
-    final public void setArguments(Object...arguments) {
+    final public void setArguments(T arguments) {
         this.argument = arguments;
     }
-    //для экзотических случаев если нам надо как то поменять аргументы после создания задачи
 }

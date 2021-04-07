@@ -21,13 +21,14 @@ public  class TaskScheduler {
     final Object innerLock = new Object();
     ThreadPoolExecutor currentExecutor=null;
     int  tasksCompleted= 0;
-
-
     Comparator<ResultedRecord> comparator = new Comparator<ResultedRecord>() {
         @Override
         public int compare(ResultedRecord resultedRecord1, ResultedRecord resultedRecord2) {
             return Integer.compare(resultedRecord1.taskNumber, resultedRecord2.taskNumber);
-        } //сортировка по номеру задачи (по порядку постановки, а не исполнения)
+        }
+
+
+
     };
 
 
@@ -37,16 +38,12 @@ public  class TaskScheduler {
     и с файловой системой.
     3. Нагрузочное тестирование на реальном аппарате, управление приоритетами потоков
     (поднять приоритет исполнения потока реально, я это делал)
-    4. Тестирование на утечки, на создание
-
-
      */
 
 
 
 
     /**
-     *
      * <p> Метод исполняет переданный ему список Tasks, в указанном числе потоков,  с вызовом
      * переданных в него слушателей на завершающие события исполнения потоков
      *
@@ -78,7 +75,6 @@ public  class TaskScheduler {
      *
      * Метод нереентерабельный, второй submit работать не будет и бросит исключение
      * Создавайте новый инстанс!
-     *
      */
 
 
@@ -116,21 +112,14 @@ public  class TaskScheduler {
                                           OnCompleted onCompleted,
                                           OnEachCompleted onEachCompleted,
                                           List<Task> listOfTasks)  {
-
-        // Я что то запутался как это проще сделать, преобразовать список задач в
-        // типизированный массив задач, а через цикл как то коряво было бы и медленнее
         final Task[] arrayOfTasks =  listOfTasks.toArray(new Task[]{});
         return submitTasks(numberOfThreads,onCompleted,
         onEachCompleted, arrayOfTasks);
-
     }
 
 
-
-
-
     /* метод  "обрамляет" переданную задачу переданными  в него обратными
-    вызовами */
+    вызовами  и передает полученные результаты в собираемые коллекции*/
 
     private Task boxTask(final Task nextTask,
                              final int currentTaskNumber,
@@ -178,8 +167,6 @@ public  class TaskScheduler {
                                     currentExecutor,
                                     completionPercent, arguments);
                         }
-
-
                         if (tasksCompleted < totalTasks) return null;
                     }   // конец блока синхронизации. Синхронизируем инкремент счетчика и проверку его
                         // значения, иначе будут твориться чудеса
@@ -258,22 +245,12 @@ public  class TaskScheduler {
 
     public class ResultedRecord {
         public int taskNumber;
-
-
         public Object[] arguments;
         public Object result;
-
-
-
         public ResultedRecord(int recordNumber, Object[] arguments, Object result) {
             this.taskNumber = recordNumber;
             this.arguments = arguments;
             this.result = result;
         }
-
-
-
-
-}
-
+    }
 }

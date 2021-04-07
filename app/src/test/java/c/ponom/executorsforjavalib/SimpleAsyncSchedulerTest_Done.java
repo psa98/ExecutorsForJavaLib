@@ -49,9 +49,9 @@ public class SimpleAsyncSchedulerTest_Done {
         Callable[] testCallableArray = new Callable[TARGET_TASKS_COUNT];
         Arrays.fill(testCallableArray, unitTestCallable);
 
-        List<Runnable> unitTestListRunnable = new ArrayList<>(Arrays.asList(testRunnableArray));
+        List<Runnable> unitTestListRunnable = new ArrayList(Arrays.asList(testRunnableArray));
 
-        List<Callable> unitTestListCallable = new ArrayList<>(Arrays.asList(testCallableArray));
+        List<Callable> unitTestListCallable = new ArrayList(Arrays.asList(testCallableArray));
 
 
 
