@@ -1,5 +1,7 @@
 package c.ponom.executorsforjavalib;
 
+
+
 import androidx.annotation.NonNull;
 
 import java.util.List;
@@ -7,7 +9,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-@SuppressWarnings({"WeakerAccess", "rawtypes", "unchecked"})
+@SuppressWarnings({"WeakerAccess", "rawtypes"})
 public class SimpleAsyncScheduler {
 
 
@@ -70,10 +72,9 @@ public class SimpleAsyncScheduler {
         if (tasks.isEmpty()) throw new IllegalArgumentException("List of tasks is empty");
 
         Callable[] callableArray=new Callable[tasks.size()];
-        Runnable[] runnableArray =new Runnable[tasks.size()];;
+        Runnable[] runnableArray =new Runnable[tasks.size()];
         if (tasks.get(0) instanceof Callable) {
             callableArray = (Callable[]) tasks.toArray(callableArray);
-            // вообще Null  тут не может быть но IDE настаивает
             return launchTasks(threads, callableArray);
         }
         if (tasks.get(0) instanceof Runnable) {

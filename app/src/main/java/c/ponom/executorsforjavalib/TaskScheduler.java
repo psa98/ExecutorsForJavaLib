@@ -243,7 +243,7 @@ public  class TaskScheduler {
                           Object...argument);
     }
 
-    public class ResultedRecord {
+    public  class ResultedRecord {
         public int taskNumber;
         public Object[] arguments;
         public Object result;

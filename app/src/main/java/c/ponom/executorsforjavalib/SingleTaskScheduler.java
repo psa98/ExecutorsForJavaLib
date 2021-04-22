@@ -7,7 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "rawtypes", "unused", "RedundantSuppression"})
 public  class SingleTaskScheduler {
 
 
@@ -22,13 +22,6 @@ public  class SingleTaskScheduler {
     6. Типичный юзкейс - просто бросить сюда лямбду, Runnable (тогда в коллбэке надо просто
     обработать исключение
 
-   */
-    // todo - добавить в примеры тестирование  для упрощенных методов, реализовав, к примеру,
-    //  скачку 10 общедоступных файлов,
-    // TODO  При портировании на Котлин вместо четырех  методов будет один с разным набором
-    //  (именованных) параметров
-
-    /**
      *
      * <p> Метод исполняет переданный ему список Callable, в одном потоке,  с вызовом
      * переданного в него коллбэка на завершающее событие исполнения.
@@ -41,15 +34,11 @@ public  class SingleTaskScheduler {
      *  соответствующий метод вызывается при завершении задачи с передачей туда результата задачи либо
      *  полученного при ее выполнении исключения как результата, если оно не обработано в поданной
      *  на исполнении задаче.
-     *                //TODO - протестировать юнит тестами оба метода передачи
-     *                    исключений - отсутствие обработки и возврат как результа
-     *
      * @return возвращает ThreadPoolExecutor, у которого можно в любой момент  запросить его
      * внутренними методами, к примеру, сбросить задачу и остановить исполнение через
      * shutdownNow(), или блокировать поток до исполнения/таймаута через
      *
      * Метод не реентерабельный, для передачи следущей задачи сознайте новый инстанс
-     *
      */
 
 
@@ -82,8 +71,9 @@ public  class SingleTaskScheduler {
         return currentExecutor;
     }
 
-    public ThreadPoolExecutor submitAsyncTask(@NonNull final Callable task)
-    {return submitAsyncTask(task,null);}
+    public ThreadPoolExecutor submitAsyncTask(@NonNull final Callable task) {
+        return submitAsyncTask(task,null);
+    }
 
 
 

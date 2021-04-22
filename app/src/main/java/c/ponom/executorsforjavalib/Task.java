@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 
 import java.util.concurrent.Callable;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"WeakerAccess", "rawtypes", "unused"})
 public  abstract class Task  {
 
 
@@ -23,6 +23,8 @@ public  abstract class Task  {
     };
 
     private Task() {
+        // приватный конструктор блокирует возможность создания задачи без установки аргументов.
+        // для таких простых случаев можно обойтись простыми Callable.
     }
 
 

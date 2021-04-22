@@ -3,6 +3,7 @@ package c.ponom.executorsforjavalib;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -15,6 +16,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -25,17 +27,18 @@ import static c.ponom.executorsforjavalib.R.string.task_count;
 import static java.lang.Math.random;
 import static java.lang.Thread.sleep;
 
+@SuppressWarnings("UnnecessaryBoxing")
 public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 {
 
 
 
-    private static final int TASKS_NUMBER = 500;
-    private static final long TIMEOUT =2000 ;
+    private static final int TASKS_NUMBER = 100;
+    private static final long TIMEOUT =5000 ;
     ///  этот таймаут в примере работает на время _постановки всего пакета задач_не их завершения
 
 
-    private static final int THREAD_NUMBER = 5;
+    private static final int THREAD_NUMBER = 4;
     //Выделение излишнего числа потоков скорее замедлит работу - из-за переключений контекста,
     // перегрузки I|O каналов, работы сборщика после завершения заданий
     private Task[] tasksOneArgument= new Task[TASKS_NUMBER];
@@ -53,8 +56,8 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
     private Collection<Object> resultsByOnEachSynchronized =
             Collections.synchronizedCollection(new ArrayList<>());
     ProgressBar progressBar;
-    TextView textView;
-    TextView textViewTasks;
+    TextView textView, textViewTasks;
+            EditText textViewResultInfo;
     //Integer[] array;
     ThreadPoolExecutor currentExecutor;
 
@@ -63,31 +66,32 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_progress_indicator);
-
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
         progressBar= findViewById(R.id.progress_bar);
         textView=findViewById(R.id.percent);
         textViewTasks=findViewById(R.id.tasks);
+        textViewResultInfo=findViewById(R.id.result_text);
+        textViewResultInfo.setText("Press button to start");
         progressBar.setMax(TASKS_NUMBER);
 
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "See resultsByExecutionOrder", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "See results by task order", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
 
                 progressBar.setProgress(0);
-
+                textViewResultInfo.setText("Wait for results");
                  /* Если мы в onEachComplete используем, к примеру, обновление элементов UI,
                  то следует учитывать что первые  numberOfThreads задач будут исполняться
                  одновременно, и ранее завершения исполнения  первой задачи из пакета этот
                  метод не вызывается, а потом будет вызван почти одновременно для первых
                  numberOfThreads задач. Это может вызвать, к примеру, резкое движение progressBar
                  в начале исполнения задач.
-                 Это не баг, а фича */
+                 Это не баг*/
 
 
                 try {
@@ -133,7 +137,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
     private void prepareTasks(){
 
         for (int i = 0; i <TASKS_NUMBER; i++)
-            tasksOneArgument[i] = createTaskOneArgument((int)(random()*100));
+            tasksOneArgument[i] = createTaskOneArgument(Integer.valueOf(i));
 
     }
 
@@ -154,7 +158,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
 
                 // для тестирования  что исключения правильно передаются выше и
                 // попадают в итоговые результаты каждый 10й объект бросит исключение
-                if ((int)arguments[0] %10 ==9 ) throw new ArithmeticException();
+                if ((int)arguments[0] %10 ==0 ) throw new ArithmeticException();
               return finalArgument *  finalArgument;
 
             }
@@ -192,7 +196,7 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
                         // проверяем существует ли еще активность
                         int count= (int) currentExecutor.getCompletedTaskCount();
 
-                        progressBar.setProgress((int) (count));
+                        setProgressBar((int) (count));
                         textView.setText(String.format(getString(completion_percent), completion));
                         textViewTasks.setText(String.format("%s%d", getString(task_count), count));
 
@@ -210,14 +214,59 @@ public class TaskSchedulerProgressBarUseExample extends AppCompatActivity
         @Override
         public void runAfterCompletion(Collection<ResultedRecord> resultsByExecutionOrder,
                                        Collection<ResultedRecord> resultsByTaskOrder) {
+            resultedRecordsByExecution.clear();
+            resultedRecordsByTaskOrder.clear();
             resultedRecordsByExecution.addAll(resultsByExecutionOrder);
             resultedRecordsByTaskOrder.addAll(resultsByTaskOrder);
             isInAscendingOrder(resultedRecordsByTaskOrder);
             isArgumentSquared(resultsByExecutionOrder);
+            ResultedRecord[] completed = resultsByTaskOrder.toArray(new ResultedRecord[1]);
+            StringBuilder resultedText = new StringBuilder();
+            for (int i=0;i<TASKS_NUMBER;i++ ) {
+
+
+                if (completed[i].result instanceof Exception) {
+                    resultedText.append("X=")
+                                .append((int) (completed[i].arguments[0]))
+                                .append("  Y= error \n");
+                continue;
+
+                }
+                resultedText.append("X=")
+                            .append((int) (completed[i].arguments[0])).append("  Y=")
+                            .append((int) (completed[i].result))
+                            .append("\n");
+            }
+
+            renewTextView(resultedText.toString());
+            // данный метод может выполнять  выполняться в другом потоке
+
 
         }
     };
 
+
+    // Работающие с Ui методы следует вызывать так
+    private void renewTextView(final String resultedText) {
+        this.runOnUiThread(new Runnable() {
+                               @Override
+                               public void run() {
+                                   textViewResultInfo.setText(resultedText);
+                               }
+                           });
+
+    }
+
+
+    private void setProgressBar(final int count) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressBar.setProgress(count);
+            }
+        });
+
+    }
 
     private void isInAscendingOrder(Collection<ResultedRecord> collection){
         // номера записей в итоговой коллекции должны идти последовательно через единицу
