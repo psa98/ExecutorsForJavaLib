@@ -4,11 +4,12 @@ import androidx.annotation.NonNull;
 
 import java.util.concurrent.Callable;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"WeakerAccess", "rawtypes"})
 public  abstract class Task<T,R> {
-    // типизация - тип аргумента, тип (R) результата задач
 
-    private T argument = null;
+    // типизация - тип (T) аргумента, тип (R) результата задач
+
+    private T arguments = null;
 
 
     final public   Callable getCallableForExecutor() {
@@ -18,7 +19,7 @@ public  abstract class Task<T,R> {
     final private Callable callableForExecutor = new Callable() {
         @Override
         final public R call() throws Exception {
-            return  doTask(argument);
+            return  doTask(arguments);
         }
     };
 
@@ -43,17 +44,17 @@ public  abstract class Task<T,R> {
 
 
 
-    public Task(@NonNull T argument) {
-        this.argument = argument;
+    public Task(@NonNull T arguments) {
+        this.arguments = arguments;
     }
 
 
 
     final public T getArguments() {
-        return argument;
+        return arguments;
     }
 
     final public void setArguments(T arguments) {
-        this.argument = arguments;
+        this.arguments = arguments;
     }
 }

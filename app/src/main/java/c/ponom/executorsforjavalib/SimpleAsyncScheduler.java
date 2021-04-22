@@ -7,7 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "rawtypes", "unchecked"})
 public class SimpleAsyncScheduler {
 
 
@@ -31,7 +31,8 @@ public class SimpleAsyncScheduler {
      *
      * @return
      * Экзекьютор, в котором при желании можно вызвать управляющие им методы, доступные после шатдауна,
-     * по крайней мере пока он жив - получить текущую очередь заданий, число выполненных и активных
+     * по крайней мере пока они исполняются - получить текущую очередь заданий,
+     * число выполненных и активных
      * заданий, вызвать shutdownNow() и тому подобное
      *
      * Напроминание пользователям:
@@ -67,9 +68,8 @@ public class SimpleAsyncScheduler {
 
     public static ThreadPoolExecutor launchTasks(int threads,@NonNull List tasks){
         if (tasks.isEmpty()) throw new IllegalArgumentException("List of tasks is empty");
-        // TODO - если делать красиво - надо typedArray использовать,
-        //  переделать и протестировать
-        Callable<Task>[] callableArray=new Callable[tasks.size()];
+
+        Callable[] callableArray=new Callable[tasks.size()];
         Runnable[] runnableArray =new Runnable[tasks.size()];;
         if (tasks.get(0) instanceof Callable) {
             callableArray = (Callable[]) tasks.toArray(callableArray);
